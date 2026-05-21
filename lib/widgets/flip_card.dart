@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 
-const Duration kFlipDuration = Duration(milliseconds: 700);
+const Duration kFlipDuration = Duration(milliseconds: 950);
 
 /// A rounded card holding one or more independently-flipping digits.
 /// Only the digits that actually change animate, so e.g. the tens place of
@@ -50,9 +50,10 @@ class FlipGroup extends StatelessWidget {
           children: [
             Row(
               children: [
-                for (final c in chars)
+                for (int i = 0; i < chars.length; i++)
                   FlipDigit(
-                    char: c,
+                    key: ValueKey('digit_$i'),
+                    char: chars[i],
                     skin: skin,
                     font: font,
                     width: digitWidth,
