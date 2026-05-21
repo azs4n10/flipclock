@@ -275,12 +275,18 @@ class _TimerScreenState extends State<TimerScreen> {
                     // FlipGroup, so the numbers match the running flip.
                     Widget digit(String ch) => SizedBox(
                           width: wheelWidth / 2,
-                          child: Center(
-                            child: FittedBox(
-                              fit: BoxFit.contain,
-                              child: Text(ch,
-                                  style: font.build(
-                                      cardHeight * 0.92, skin.digitColor)),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: (wheelWidth / 2) * 0.08,
+                              vertical: cardHeight * 0.10,
+                            ),
+                            child: Center(
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: Text(ch,
+                                    style: font.build(
+                                        cardHeight * 0.92, skin.digitColor)),
+                              ),
                             ),
                           ),
                         );

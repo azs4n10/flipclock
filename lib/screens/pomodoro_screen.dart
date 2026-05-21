@@ -7,7 +7,6 @@ import '../services/alerts.dart';
 import '../state/app_state.dart';
 import '../widgets/flip_card_row.dart';
 import '../widgets/pill_button.dart';
-import 'pomodoro_settings_sheet.dart';
 
 enum PomodoroPhase { focus, shortBreak, longBreak }
 
@@ -114,22 +113,6 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Stack(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                icon: Icon(Icons.tune, color: skin.primaryTextColor),
-                onPressed: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: skin.background,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  builder: (_) => const PomodoroSettingsSheet(),
-                ),
-              ),
-            ),
             Align(
               alignment: Alignment.topCenter,
               child: Padding(

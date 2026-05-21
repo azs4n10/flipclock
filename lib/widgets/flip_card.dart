@@ -295,10 +295,17 @@ class _Leaf extends StatelessWidget {
             child: Stack(
               children: [
                 Positioned.fill(child: ColoredBox(color: skin.cardBackground)),
-                Center(
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Text(digit, style: textStyle),
+                Padding(
+                  // Margin so tall/wide glyphs are not clipped by the card edge.
+                  padding: EdgeInsets.symmetric(
+                    horizontal: cardSize.width * 0.08,
+                    vertical: cardSize.height * 0.10,
+                  ),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Text(digit, style: textStyle),
+                    ),
                   ),
                 ),
                 if (shade > 0)
