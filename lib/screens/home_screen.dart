@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../state/app_state.dart';
+import '../widgets/segmented_tabs.dart';
+import 'clock_screen.dart';
+import 'pomodoro_screen.dart';
+import 'skin_picker_screen.dart';
+import 'timer_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _tabIndex = 1; // Clock by default
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.watch<AppState>().skin;
+
+    final screens = const [
+      PomodoroScreen(),
+      ClockScreen(),
+      TimerScreen(),
+    ];
+
+    return Scaffold(
+      backgroundColor: skin.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.palette_outlined,
+                      color: skin.primaryTextColor,
+                    ),
+                    tooltip: 'Change skin',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SkinPickerScreen(),
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  SegmentedTabs(
+                    items: const ['Pomodoro', 'Clock', 'Timer'],
+                    selectedIndex: _tabIndex,
+                    onChanged: (i) => setState(() => _tabIndex = i),
+                    skin: skin,
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+            Expanded(child: screens[_tabIndex]),
+          ],
+        ),
+      ),
+    );
+  }
+}
