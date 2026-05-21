@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/app_actions.dart';
 import '../state/app_state.dart';
 import '../theme/skin.dart';
 
@@ -120,6 +121,26 @@ class PomodoroSettingsSheet extends StatelessWidget {
               suffix: 'focus',
               skin: skin,
             ),
+            const SizedBox(height: 12),
+            _SectionLabel('More', skin: skin),
+            _ActionTile(
+              label: 'Share',
+              icon: Icons.ios_share,
+              onTap: AppActions.share,
+              skin: skin,
+            ),
+            _ActionTile(
+              label: 'Send feedback',
+              icon: Icons.mail_outline,
+              onTap: AppActions.feedback,
+              skin: skin,
+            ),
+            _ActionTile(
+              label: 'Rate us',
+              icon: Icons.star_outline,
+              onTap: AppActions.rate,
+              skin: skin,
+            ),
           ],
           ),
         ),
@@ -221,6 +242,43 @@ class _SignatureTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     fontSize: 14, color: skin.subTextColor),
+              ),
+            ),
+            Icon(Icons.chevron_right, color: skin.subTextColor, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    required this.skin,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Skin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: skin.accentColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(fontSize: 15, color: skin.primaryTextColor),
               ),
             ),
             Icon(Icons.chevron_right, color: skin.subTextColor, size: 20),
