@@ -141,7 +141,7 @@ class _FlipDigitState extends State<FlipDigit>
           skin: widget.skin,
           textStyle: widget.font.build(fontSize, widget.skin.digitColor),
           cardSize: Size(widget.width, widget.height),
-          progress: _controller.value,
+          progress: Curves.easeInOut.transform(_controller.value),
         ),
       ),
     );
@@ -199,7 +199,7 @@ class _SplitFlap extends StatelessWidget {
             child: Transform(
               alignment: Alignment.bottomCenter,
               transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0015)
+                ..setEntry(3, 2, 0.0035)
                 ..rotateX(-math.pi / 2 * p1),
               child: _Leaf(
                 half: _Half.top,
@@ -217,7 +217,7 @@ class _SplitFlap extends StatelessWidget {
             child: Transform(
               alignment: Alignment.topCenter,
               transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0015)
+                ..setEntry(3, 2, 0.0035)
                 ..rotateX(math.pi / 2 * (1 - p2)),
               child: _Leaf(
                 half: _Half.bottom,
@@ -278,8 +278,21 @@ class _Leaf extends StatelessWidget {
                 ),
                 if (shade > 0)
                   Positioned.fill(
-                    child: ColoredBox(
-                      color: Colors.black.withValues(alpha: 0.18 * shade),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: isTop
+                              ? Alignment.topCenter
+                              : Alignment.bottomCenter,
+                          end: isTop
+                              ? Alignment.bottomCenter
+                              : Alignment.topCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.10 * shade),
+                            Colors.black.withValues(alpha: 0.55 * shade),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
               ],
