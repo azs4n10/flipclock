@@ -5,6 +5,7 @@ import '../state/app_state.dart';
 import '../widgets/segmented_tabs.dart';
 import 'clock_screen.dart';
 import 'pomodoro_screen.dart';
+import 'pomodoro_settings_sheet.dart';
 import 'skin_picker_screen.dart';
 import 'timer_screen.dart';
 
@@ -71,7 +72,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     skin: skin,
                   ),
                   const Spacer(),
-                  const SizedBox(width: 48),
+                  IconButton(
+                    icon: Icon(Icons.tune, color: skin.primaryTextColor),
+                    tooltip: 'Pomodoro settings',
+                    onPressed: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: skin.background,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(24)),
+                      ),
+                      builder: (_) => const PomodoroSettingsSheet(),
+                    ),
+                  ),
                 ],
               ),
             ),
