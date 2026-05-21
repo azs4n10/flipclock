@@ -6,7 +6,7 @@ import 'package:flutter/scheduler.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 
-const Duration kFlipDuration = Duration(milliseconds: 570);
+const Duration kFlipDuration = Duration(milliseconds: 500);
 
 /// A rounded card holding one or more independently-flipping digits.
 /// Only the digits that actually change animate, so e.g. the tens place of
