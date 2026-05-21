@@ -44,7 +44,8 @@ class _ClockScreenState extends State<ClockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.watch<AppState>().skin;
+    final appState = context.watch<AppState>();
+    final skin = appState.skin;
     final hh = _now.hour.toString().padLeft(2, '0');
     final mm = _now.minute.toString().padLeft(2, '0');
     final ss = _now.second.toString().padLeft(2, '0');
@@ -67,7 +68,7 @@ class _ClockScreenState extends State<ClockScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            FlipCardRow(values: [hh, mm, ss], skin: skin),
+            FlipCardRow(values: [hh, mm, ss], skin: skin, font: appState.font),
             const SizedBox(height: 28),
             Text(
               'less is more',

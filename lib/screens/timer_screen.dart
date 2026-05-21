@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../services/alerts.dart';
 import '../state/app_state.dart';
+import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../widgets/flip_card_row.dart';
 import '../widgets/pill_button.dart';
@@ -25,11 +26,13 @@ class _TimerScreenState extends State<TimerScreen> {
   Timer? _ticker;
   bool _running = false;
 
-  Duration _elapsed = Duration.zero;
+  // Reference-time based timing keeps the display accurate across pauses
+  // regardless of how precisely the ticker fires.
+  Duration _accumulated = Duration.zero;
+  DateTime? _startedAt;
+
   Duration _countDownInitial = const Duration(minutes: 10);
-  Duration _countDownRemaining = const Duration(minutes: 10);
   DateTime _targetTime = DateTime.now().add(const Duration(hours: 1));
-  Duration _targetRemaining = const Duration(hours: 1);
 
   @override
   void dispose() {
@@ -37,61 +40,52 @@ class _TimerScreenState extends State<TimerScreen> {
     super.dispose();
   }
 
+  Duration get _elapsed {
+    var e = _accumulated;
+    if (_running && _startedAt != null) {
+      e += DateTime.now().difference(_startedAt!);
+    }
+    return e;
+  }
+
   void _toggleStart() {
     if (_running) {
+      _accumulated = _elapsed;
+      _startedAt = null;
       _ticker?.cancel();
       setState(() => _running = false);
       return;
     }
+    _startedAt = DateTime.now();
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(milliseconds: 250), (_) {
+    _ticker = Timer.periodic(const Duration(milliseconds: 33), (_) {
       if (!mounted) return;
       setState(() {
-        switch (_mode) {
-          case TimerMode.countUp:
-            _elapsed += const Duration(milliseconds: 250);
-            break;
-          case TimerMode.countDown:
-            if (_countDownRemaining.inMilliseconds <= 250) {
-              _countDownRemaining = Duration.zero;
-              _ticker?.cancel();
-              _running = false;
-              Alerts.notify(context.read<AppState>());
-            } else {
-              _countDownRemaining -= const Duration(milliseconds: 250);
-            }
-            break;
-          case TimerMode.targetTime:
-            final diff = _targetTime.difference(DateTime.now());
-            _targetRemaining = diff.isNegative ? Duration.zero : diff;
-            if (diff.isNegative) {
-              _ticker?.cancel();
-              _running = false;
-              Alerts.notify(context.read<AppState>());
-            }
-            break;
+        if (_mode == TimerMode.countDown && _elapsed >= _countDownInitial) {
+          _finish();
+        } else if (_mode == TimerMode.targetTime &&
+            DateTime.now().isAfter(_targetTime)) {
+          _finish();
         }
       });
     });
     setState(() => _running = true);
   }
 
+  void _finish() {
+    _ticker?.cancel();
+    _running = false;
+    _startedAt = null;
+    _accumulated = _countDownInitial;
+    Alerts.notify(context.read<AppState>());
+  }
+
   void _reset() {
     _ticker?.cancel();
     setState(() {
       _running = false;
-      switch (_mode) {
-        case TimerMode.countUp:
-          _elapsed = Duration.zero;
-          break;
-        case TimerMode.countDown:
-          _countDownRemaining = _countDownInitial;
-          break;
-        case TimerMode.targetTime:
-          _targetRemaining = _targetTime.difference(DateTime.now());
-          if (_targetRemaining.isNegative) _targetRemaining = Duration.zero;
-          break;
-      }
+      _accumulated = Duration.zero;
+      _startedAt = null;
     });
   }
 
@@ -100,10 +94,8 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {
       _mode = mode;
       _running = false;
-      _elapsed = Duration.zero;
-      _countDownRemaining = _countDownInitial;
-      _targetRemaining = _targetTime.difference(DateTime.now());
-      if (_targetRemaining.isNegative) _targetRemaining = Duration.zero;
+      _accumulated = Duration.zero;
+      _startedAt = null;
     });
   }
 
@@ -112,19 +104,25 @@ class _TimerScreenState extends State<TimerScreen> {
       case TimerMode.countUp:
         return _elapsed;
       case TimerMode.countDown:
-        return _countDownRemaining;
+        final r = _countDownInitial - _elapsed;
+        return r.isNegative ? Duration.zero : r;
       case TimerMode.targetTime:
-        return _targetRemaining;
+        final r = _targetTime.difference(DateTime.now());
+        return r.isNegative ? Duration.zero : r;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.watch<AppState>().skin;
+    final appState = context.watch<AppState>();
+    final skin = appState.skin;
+    final font = appState.font;
     final d = _shownDuration();
     final hh = (d.inHours % 100).toString().padLeft(2, '0');
     final mm = (d.inMinutes % 60).toString().padLeft(2, '0');
     final ss = (d.inSeconds % 60).toString().padLeft(2, '0');
+    final cc = ((d.inMilliseconds % 1000) ~/ 10).toString().padLeft(2, '0');
+    final showCenti = _mode != TimerMode.targetTime;
 
     return SafeArea(
       child: Padding(
@@ -145,8 +143,13 @@ class _TimerScreenState extends State<TimerScreen> {
               values: [hh, mm, ss],
               labels: const ['HOUR', 'MIN', 'SEC'],
               skin: skin,
+              font: font,
             ),
-            const SizedBox(height: 32),
+            if (showCenti) ...[
+              const SizedBox(height: 14),
+              _CentiReadout(value: cc, skin: skin, font: font),
+            ],
+            const SizedBox(height: 28),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 12,
@@ -206,10 +209,8 @@ class _TimerScreenState extends State<TimerScreen> {
           IconButton(
             icon: Icon(Icons.remove_circle_outline, color: skin.accentColor),
             onPressed: minutes > 1 && !_running
-                ? () => setState(() {
-                      _countDownInitial = Duration(minutes: minutes - 1);
-                      _countDownRemaining = _countDownInitial;
-                    })
+                ? () => setState(
+                    () => _countDownInitial = Duration(minutes: minutes - 1))
                 : null,
           ),
           Text(
@@ -223,10 +224,8 @@ class _TimerScreenState extends State<TimerScreen> {
           IconButton(
             icon: Icon(Icons.add_circle_outline, color: skin.accentColor),
             onPressed: !_running
-                ? () => setState(() {
-                      _countDownInitial = Duration(minutes: minutes + 1);
-                      _countDownRemaining = _countDownInitial;
-                    })
+                ? () => setState(
+                    () => _countDownInitial = Duration(minutes: minutes + 1))
                 : null,
           ),
         ],
@@ -274,11 +273,6 @@ class _TimerScreenState extends State<TimerScreen> {
                         time.hour,
                         time.minute,
                       );
-                      _targetRemaining =
-                          _targetTime.difference(DateTime.now());
-                      if (_targetRemaining.isNegative) {
-                        _targetRemaining = Duration.zero;
-                      }
                     });
                   },
             child: Text(
@@ -288,6 +282,55 @@ class _TimerScreenState extends State<TimerScreen> {
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Centiseconds (1/100 s) shown as a small static readout. It changes too fast
+/// to flip, so it is rendered as plain text in the selected digit font.
+class _CentiReadout extends StatelessWidget {
+  const _CentiReadout({
+    required this.value,
+    required this.skin,
+    required this.font,
+  });
+
+  final String value;
+  final Skin skin;
+  final DigitFont font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: skin.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: skin.dividerColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '.',
+            style: font.build(34, skin.digitColor),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            value,
+            style: font.build(34, skin.digitColor),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '1/100s',
+            style: TextStyle(
+              color: skin.subTextColor,
+              fontSize: 11,
+              letterSpacing: 1,
             ),
           ),
         ],

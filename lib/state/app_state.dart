@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../theme/skins.dart';
 
 class AppState extends ChangeNotifier {
   AppState._(this._prefs)
       : _skin = skinById(_prefs.getString(_kSkinId) ?? yumekawaSkin.id),
+        _font = fontById(_prefs.getString(_kFontId) ?? allFonts.first.id),
         _focusMinutes = _prefs.getInt(_kFocusMinutes) ?? 25,
         _shortBreakMinutes = _prefs.getInt(_kShortBreakMinutes) ?? 5,
         _longBreakMinutes = _prefs.getInt(_kLongBreakMinutes) ?? 15,
@@ -15,6 +17,7 @@ class AppState extends ChangeNotifier {
         _vibrationEnabled = _prefs.getBool(_kVibration) ?? true;
 
   static const String _kSkinId = 'skin_id';
+  static const String _kFontId = 'font_id';
   static const String _kFocusMinutes = 'focus_minutes';
   static const String _kShortBreakMinutes = 'short_break_minutes';
   static const String _kLongBreakMinutes = 'long_break_minutes';
@@ -30,6 +33,7 @@ class AppState extends ChangeNotifier {
   final SharedPreferences _prefs;
 
   Skin _skin;
+  DigitFont _font;
   int _focusMinutes;
   int _shortBreakMinutes;
   int _longBreakMinutes;
@@ -38,6 +42,7 @@ class AppState extends ChangeNotifier {
   bool _vibrationEnabled;
 
   Skin get skin => _skin;
+  DigitFont get font => _font;
   int get focusMinutes => _focusMinutes;
   int get shortBreakMinutes => _shortBreakMinutes;
   int get longBreakMinutes => _longBreakMinutes;
@@ -49,6 +54,13 @@ class AppState extends ChangeNotifier {
     if (_skin.id == next.id) return;
     _skin = next;
     await _prefs.setString(_kSkinId, next.id);
+    notifyListeners();
+  }
+
+  Future<void> setFont(DigitFont next) async {
+    if (_font.id == next.id) return;
+    _font = next;
+    await _prefs.setString(_kFontId, next.id);
     notifyListeners();
   }
 

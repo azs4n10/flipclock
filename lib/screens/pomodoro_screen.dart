@@ -144,6 +144,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
             FlipCardRow(
               values: [mm, ss],
               skin: skin,
+              font: state.font,
               maxCardWidth: 280,
             ),
             const SizedBox(height: 6),

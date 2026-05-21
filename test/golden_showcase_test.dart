@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flipclock/theme/fonts.dart' show DigitFont;
 import 'package:flipclock/theme/skin.dart';
 import 'package:flipclock/theme/skins.dart';
 import 'package:flipclock/widgets/flip_card_row.dart';
 import 'package:flipclock/widgets/pill_button.dart';
 import 'package:flipclock/widgets/segmented_tabs.dart';
+
+// Plain font that avoids google_fonts' runtime network fetch in tests.
+final DigitFont _testFont = DigitFont(
+  id: 'test',
+  name: 'Test',
+  build: (s, c) => TextStyle(
+    fontSize: s,
+    color: c,
+    fontWeight: FontWeight.w800,
+    height: 1.0,
+    letterSpacing: -2,
+  ),
+);
 
 Widget _showcase(Skin skin) {
   return MaterialApp(
@@ -34,7 +48,11 @@ Widget _showcase(Skin skin) {
                 ),
               ),
               const SizedBox(height: 24),
-              FlipCardRow(values: const ['14', '38', '02'], skin: skin),
+              FlipCardRow(
+                values: const ['14', '38', '02'],
+                skin: skin,
+                font: _testFont,
+              ),
               const SizedBox(height: 18),
               Text(
                 'less is more',

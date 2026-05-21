@@ -2,44 +2,108 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/fonts.dart';
 import '../theme/skin.dart';
 
-class FlipCard extends StatefulWidget {
-  const FlipCard({
+const Duration kFlipDuration = Duration(milliseconds: 800);
+
+/// A rounded card holding one or more independently-flipping digits.
+/// Only the digits that actually change animate, so e.g. the tens place of
+/// the seconds stays still while the ones place flips each second.
+class FlipGroup extends StatelessWidget {
+  const FlipGroup({
     super.key,
     required this.value,
     required this.skin,
+    required this.font,
     required this.width,
     required this.height,
   });
 
   final String value;
   final Skin skin;
+  final DigitFont font;
   final double width;
   final double height;
 
   @override
-  State<FlipCard> createState() => _FlipCardState();
+  Widget build(BuildContext context) {
+    final radius = width * 0.15;
+    final chars = value.split('');
+    final digitWidth = width / chars.length;
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: skin.accentColor.withValues(alpha: 0.18),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                for (final c in chars)
+                  FlipDigit(
+                    char: c,
+                    skin: skin,
+                    font: font,
+                    width: digitWidth,
+                    height: height,
+                  ),
+              ],
+            ),
+            Center(child: Container(height: 2, color: skin.dividerColor)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _FlipCardState extends State<FlipCard>
+class FlipDigit extends StatefulWidget {
+  const FlipDigit({
+    super.key,
+    required this.char,
+    required this.skin,
+    required this.font,
+    required this.width,
+    required this.height,
+  });
+
+  final String char;
+  final Skin skin;
+  final DigitFont font;
+  final double width;
+  final double height;
+
+  @override
+  State<FlipDigit> createState() => _FlipDigitState();
+}
+
+class _FlipDigitState extends State<FlipDigit>
     with SingleTickerProviderStateMixin {
-  late String _current = widget.value;
-  late String _next = widget.value;
+  late String _current = widget.char;
+  late String _next = widget.char;
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 420),
-    )..addStatusListener((status) {
+    _controller = AnimationController(vsync: this, duration: kFlipDuration)
+      ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() => _current = _next);
           _controller.reset();
-          if (widget.value != _current) {
-            _next = widget.value;
+          if (widget.char != _current) {
+            _next = widget.char;
             _controller.forward();
           }
         }
@@ -47,13 +111,13 @@ class _FlipCardState extends State<FlipCard>
   }
 
   @override
-  void didUpdateWidget(covariant FlipCard old) {
+  void didUpdateWidget(covariant FlipDigit old) {
     super.didUpdateWidget(old);
-    if (widget.value != _current && !_controller.isAnimating) {
-      _next = widget.value;
+    if (widget.char != _current && !_controller.isAnimating) {
+      _next = widget.char;
       _controller.forward();
     } else if (_controller.isAnimating) {
-      _next = widget.value;
+      _next = widget.char;
     }
   }
 
@@ -65,8 +129,7 @@ class _FlipCardState extends State<FlipCard>
 
   @override
   Widget build(BuildContext context) {
-    final radius = widget.width * 0.15;
-    final fontSize = widget.height * 0.95;
+    final fontSize = widget.height * 0.92;
     return SizedBox(
       width: widget.width,
       height: widget.height,
@@ -76,8 +139,7 @@ class _FlipCardState extends State<FlipCard>
           current: _current,
           next: _next,
           skin: widget.skin,
-          fontSize: fontSize,
-          radius: radius,
+          textStyle: widget.font.build(fontSize, widget.skin.digitColor),
           cardSize: Size(widget.width, widget.height),
           progress: _controller.value,
         ),
@@ -91,8 +153,7 @@ class _SplitFlap extends StatelessWidget {
     required this.current,
     required this.next,
     required this.skin,
-    required this.fontSize,
-    required this.radius,
+    required this.textStyle,
     required this.cardSize,
     required this.progress,
   });
@@ -100,44 +161,38 @@ class _SplitFlap extends StatelessWidget {
   final String current;
   final String next;
   final Skin skin;
-  final double fontSize;
-  final double radius;
+  final TextStyle textStyle;
   final Size cardSize;
   final double progress;
 
   @override
   Widget build(BuildContext context) {
     final flipping = progress > 0 && current != next;
-    final p1 = (progress / 0.5).clamp(0.0, 1.0); // phase 1 progress
-    final p2 = ((progress - 0.5) / 0.5).clamp(0.0, 1.0); // phase 2 progress
+    final p1 = (progress / 0.5).clamp(0.0, 1.0);
+    final p2 = ((progress - 0.5) / 0.5).clamp(0.0, 1.0);
 
     return Stack(
       children: [
-        // Static top: the upcoming digit's top half (revealed once top leaf folds)
         Align(
           alignment: Alignment.topCenter,
           child: _Leaf(
             half: _Half.top,
             digit: flipping ? next : current,
             skin: skin,
-            fontSize: fontSize,
-            radius: radius,
+            textStyle: textStyle,
             cardSize: cardSize,
           ),
         ),
-        // Static bottom: the current digit's bottom half (stays until leaf lands)
         Align(
           alignment: Alignment.bottomCenter,
           child: _Leaf(
             half: _Half.bottom,
             digit: current,
             skin: skin,
-            fontSize: fontSize,
-            radius: radius,
+            textStyle: textStyle,
             cardSize: cardSize,
           ),
         ),
-        // Phase 1: current top half folds down around the center divider
         if (flipping && progress < 0.5)
           Align(
             alignment: Alignment.topCenter,
@@ -150,14 +205,12 @@ class _SplitFlap extends StatelessWidget {
                 half: _Half.top,
                 digit: current,
                 skin: skin,
-                fontSize: fontSize,
-                radius: radius,
+                textStyle: textStyle,
                 cardSize: cardSize,
                 shade: p1,
               ),
             ),
           ),
-        // Phase 2: next bottom half folds down into place
         if (flipping && progress >= 0.5)
           Align(
             alignment: Alignment.bottomCenter,
@@ -170,15 +223,12 @@ class _SplitFlap extends StatelessWidget {
                 half: _Half.bottom,
                 digit: next,
                 skin: skin,
-                fontSize: fontSize,
-                radius: radius,
+                textStyle: textStyle,
                 cardSize: cardSize,
                 shade: 1 - p2,
               ),
             ),
           ),
-        // Center divider line
-        Center(child: Container(height: 2, color: skin.dividerColor)),
       ],
     );
   }
@@ -191,8 +241,7 @@ class _Leaf extends StatelessWidget {
     required this.half,
     required this.digit,
     required this.skin,
-    required this.fontSize,
-    required this.radius,
+    required this.textStyle,
     required this.cardSize,
     this.shade = 0,
   });
@@ -200,63 +249,40 @@ class _Leaf extends StatelessWidget {
   final _Half half;
   final String digit;
   final Skin skin;
-  final double fontSize;
-  final double radius;
+  final TextStyle textStyle;
   final Size cardSize;
-
-  /// 0 = no shadow, 1 = darkest. Fakes the lighting while folding.
   final double shade;
 
   @override
   Widget build(BuildContext context) {
     final isTop = half == _Half.top;
-    final borderRadius = isTop
-        ? BorderRadius.vertical(top: Radius.circular(radius))
-        : BorderRadius.vertical(bottom: Radius.circular(radius));
-
-    // A half-height box that shows the corresponding half of a full-size,
-    // center-aligned digit. The shared edge sits exactly on the divider.
     return SizedBox(
       width: cardSize.width,
       height: cardSize.height / 2,
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: ClipRect(
-          child: OverflowBox(
-            maxHeight: cardSize.height,
-            minHeight: cardSize.height,
-            alignment: isTop ? Alignment.topCenter : Alignment.bottomCenter,
-            child: SizedBox(
-              width: cardSize.width,
-              height: cardSize.height,
-              child: Stack(
-                children: [
+      child: ClipRect(
+        child: OverflowBox(
+          maxHeight: cardSize.height,
+          minHeight: cardSize.height,
+          alignment: isTop ? Alignment.topCenter : Alignment.bottomCenter,
+          child: SizedBox(
+            width: cardSize.width,
+            height: cardSize.height,
+            child: Stack(
+              children: [
+                Positioned.fill(child: ColoredBox(color: skin.cardBackground)),
+                Center(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: Text(digit, style: textStyle),
+                  ),
+                ),
+                if (shade > 0)
                   Positioned.fill(
-                    child: ColoredBox(color: skin.cardBackground),
-                  ),
-                  Center(
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Text(
-                        digit,
-                        style: TextStyle(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w800,
-                          color: skin.digitColor,
-                          height: 1.0,
-                          letterSpacing: -2,
-                        ),
-                      ),
+                    child: ColoredBox(
+                      color: Colors.black.withValues(alpha: 0.18 * shade),
                     ),
                   ),
-                  if (shade > 0)
-                    Positioned.fill(
-                      child: ColoredBox(
-                        color: Colors.black.withValues(alpha: 0.18 * shade),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
