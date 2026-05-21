@@ -137,54 +137,72 @@ class _TimerScreenState extends State<TimerScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
+        child: Stack(
           children: [
-            const SizedBox(height: 8),
-            SegmentedTabs(
-              items: const ['Count Up', 'Count Down', 'Target'],
-              selectedIndex: _mode.index,
-              onChanged: (i) => _switchMode(TimerMode.values[i]),
-              skin: skin,
-            ),
-            const SizedBox(height: 24),
-            _modeConfig(skin),
-            const Spacer(),
-            if (_mode == TimerMode.countDown && !_running)
-              _countdownWheels(skin, font)
-            else
-              FlipCardRow(
-                values: [hh, mm, ss],
-                labels: const ['HOUR', 'MIN', 'SEC'],
-                skin: skin,
-                font: font,
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SegmentedTabs(
+                      items: const ['Count Up', 'Count Down', 'Target'],
+                      selectedIndex: _mode.index,
+                      onChanged: (i) => _switchMode(TimerMode.values[i]),
+                      skin: skin,
+                    ),
+                    const SizedBox(height: 16),
+                    _modeConfig(skin),
+                  ],
+                ),
               ),
-            // Reserve the centiseconds row in every state so the cards do not
-            // shift vertically between wheel-setup and the running flip.
-            if (showCenti) ...[
-              const SizedBox(height: 14),
-              _CentiReadout(value: cc, skin: skin, font: font),
-            ],
-            const SizedBox(height: 28),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                PillButton(
-                  label: _running ? 'Pause' : 'Start',
-                  onPressed: _toggleStart,
-                  skin: skin,
-                  icon: _running ? Icons.pause : Icons.play_arrow,
-                ),
-                PillButton(
-                  label: 'Reset',
-                  onPressed: _reset,
-                  skin: skin,
-                  outlined: true,
-                ),
-              ],
             ),
-            const Spacer(),
+            Align(
+              alignment: Alignment.center,
+              child: _mode == TimerMode.countDown && !_running
+                  ? _countdownWheels(skin, font)
+                  : FlipCardRow(
+                      values: [hh, mm, ss],
+                      labels: const ['HOUR', 'MIN', 'SEC'],
+                      skin: skin,
+                      font: font,
+                    ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showCenti) ...[
+                      _CentiReadout(value: cc, skin: skin, font: font),
+                      const SizedBox(height: 16),
+                    ],
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        PillButton(
+                          label: _running ? 'Pause' : 'Start',
+                          onPressed: _toggleStart,
+                          skin: skin,
+                          icon: _running ? Icons.pause : Icons.play_arrow,
+                        ),
+                        PillButton(
+                          label: 'Reset',
+                          onPressed: _reset,
+                          skin: skin,
+                          outlined: true,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

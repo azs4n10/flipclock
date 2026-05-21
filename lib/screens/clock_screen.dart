@@ -54,21 +54,26 @@ class _ClockScreenState extends State<ClockScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            const Spacer(),
-            Text(
-              dateText,
-              style: TextStyle(
-                fontSize: 32,
-                color: skin.primaryTextColor,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: Text(
+                  dateText,
+                  style: TextStyle(
+                    fontSize: 32,
+                    color: skin.primaryTextColor,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 28),
-            AnimatedSwitcher(
+            Align(
+              alignment: Alignment.center,
+              child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 450),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
@@ -103,18 +108,23 @@ class _ClockScreenState extends State<ClockScreen> {
                           values: [hh, mm, ss],
                           skin: skin,
                           font: appState.font),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              'less is more',
-              style: TextStyle(
-                fontSize: 14,
-                color: skin.subTextColor,
-                letterSpacing: 2.5,
-                fontWeight: FontWeight.w500,
               ),
             ),
-            const Spacer(),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 28),
+                child: Text(
+                  'less is more',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: skin.subTextColor,
+                    letterSpacing: 2.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
