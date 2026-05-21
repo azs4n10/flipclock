@@ -12,7 +12,7 @@ import 'package:flipclock/widgets/segmented_tabs.dart';
 final DigitFont _testFont = DigitFont(
   id: 'test',
   name: 'Test',
-  build: (s, c) => TextStyle(
+  builder: (s, c) => TextStyle(
     fontSize: s,
     color: c,
     fontWeight: FontWeight.w800,

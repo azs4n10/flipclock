@@ -9,19 +9,26 @@ class DigitFont {
   const DigitFont({
     required this.id,
     required this.name,
-    required this.build,
-  });
+    required TextStyle Function(double fontSize, Color color) builder,
+    // ignore: prefer_initializing_formals
+  }) : _builder = builder;
 
   final String id;
   final String name;
-  final TextStyle Function(double fontSize, Color color) build;
+  final TextStyle Function(double fontSize, Color color) _builder;
+
+  /// Builds the style with tabular (fixed-width) figures so every digit —
+  /// including the narrow "1" — occupies the same advance and renders at the
+  /// same size when fitted into a flip card.
+  TextStyle build(double fontSize, Color color) => _builder(fontSize, color)
+      .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 }
 
 final List<DigitFont> allFonts = [
   DigitFont(
     id: 'bold',
     name: 'Bold',
-    build: (s, c) => GoogleFonts.inter(
+    builder: (s, c) => GoogleFonts.inter(
       fontSize: s,
       color: c,
       fontWeight: FontWeight.w800,
@@ -32,7 +39,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'light',
     name: 'Light',
-    build: (s, c) => GoogleFonts.inter(
+    builder: (s, c) => GoogleFonts.inter(
       fontSize: s,
       color: c,
       fontWeight: FontWeight.w300,
@@ -43,7 +50,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'rounded',
     name: 'Rounded',
-    build: (s, c) => GoogleFonts.nunito(
+    builder: (s, c) => GoogleFonts.nunito(
       fontSize: s,
       color: c,
       fontWeight: FontWeight.w800,
@@ -53,7 +60,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'serif',
     name: 'Serif',
-    build: (s, c) => GoogleFonts.playfairDisplay(
+    builder: (s, c) => GoogleFonts.playfairDisplay(
       fontSize: s,
       color: c,
       fontWeight: FontWeight.w700,
@@ -63,7 +70,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'serif_heavy',
     name: 'Serif Heavy',
-    build: (s, c) => GoogleFonts.dmSerifDisplay(
+    builder: (s, c) => GoogleFonts.dmSerifDisplay(
       fontSize: s,
       color: c,
       height: 1.0,
@@ -72,7 +79,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'slab',
     name: 'Slab',
-    build: (s, c) => GoogleFonts.robotoSlab(
+    builder: (s, c) => GoogleFonts.robotoSlab(
       fontSize: s,
       color: c,
       fontWeight: FontWeight.w800,
@@ -82,7 +89,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'stencil',
     name: 'Stencil',
-    build: (s, c) => GoogleFonts.sairaStencilOne(
+    builder: (s, c) => GoogleFonts.sairaStencilOne(
       fontSize: s,
       color: c,
       height: 1.0,
@@ -91,7 +98,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'rails',
     name: 'Rails',
-    build: (s, c) => GoogleFonts.monoton(
+    builder: (s, c) => GoogleFonts.monoton(
       fontSize: s,
       color: c,
       height: 1.0,
