@@ -14,7 +14,11 @@ class AppState extends ChangeNotifier {
         _longBreakMinutes = _prefs.getInt(_kLongBreakMinutes) ?? 15,
         _longBreakInterval = _prefs.getInt(_kLongBreakInterval) ?? 4,
         _remindSoundEnabled = _prefs.getBool(_kRemindSound) ?? true,
-        _vibrationEnabled = _prefs.getBool(_kVibration) ?? true;
+        _vibrationEnabled = _prefs.getBool(_kVibration) ?? true,
+        _use24Hour = _prefs.getBool(_kUse24Hour) ?? true,
+        _showSeconds = _prefs.getBool(_kShowSeconds) ?? true,
+        _showDate = _prefs.getBool(_kShowDate) ?? true,
+        _signature = _prefs.getString(_kSignature) ?? 'less is more';
 
   static const String _kSkinId = 'skin_id';
   static const String _kFontId = 'font_id';
@@ -24,6 +28,10 @@ class AppState extends ChangeNotifier {
   static const String _kLongBreakInterval = 'long_break_interval';
   static const String _kRemindSound = 'remind_sound';
   static const String _kVibration = 'vibration';
+  static const String _kUse24Hour = 'use_24_hour';
+  static const String _kShowSeconds = 'show_seconds';
+  static const String _kShowDate = 'show_date';
+  static const String _kSignature = 'signature';
 
   static Future<AppState> create() async {
     final prefs = await SharedPreferences.getInstance();
@@ -40,6 +48,10 @@ class AppState extends ChangeNotifier {
   int _longBreakInterval;
   bool _remindSoundEnabled;
   bool _vibrationEnabled;
+  bool _use24Hour;
+  bool _showSeconds;
+  bool _showDate;
+  String _signature;
 
   Skin get skin => _skin;
   DigitFont get font => _font;
@@ -49,6 +61,10 @@ class AppState extends ChangeNotifier {
   int get longBreakInterval => _longBreakInterval;
   bool get remindSoundEnabled => _remindSoundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
+  bool get use24Hour => _use24Hour;
+  bool get showSeconds => _showSeconds;
+  bool get showDate => _showDate;
+  String get signature => _signature;
 
   Future<void> setSkin(Skin next) async {
     if (_skin.id == next.id) return;
@@ -97,6 +113,30 @@ class AppState extends ChangeNotifier {
   Future<void> setVibrationEnabled(bool v) async {
     _vibrationEnabled = v;
     await _prefs.setBool(_kVibration, v);
+    notifyListeners();
+  }
+
+  Future<void> setUse24Hour(bool v) async {
+    _use24Hour = v;
+    await _prefs.setBool(_kUse24Hour, v);
+    notifyListeners();
+  }
+
+  Future<void> setShowSeconds(bool v) async {
+    _showSeconds = v;
+    await _prefs.setBool(_kShowSeconds, v);
+    notifyListeners();
+  }
+
+  Future<void> setShowDate(bool v) async {
+    _showDate = v;
+    await _prefs.setBool(_kShowDate, v);
+    notifyListeners();
+  }
+
+  Future<void> setSignature(String v) async {
+    _signature = v;
+    await _prefs.setString(_kSignature, v);
     notifyListeners();
   }
 }
