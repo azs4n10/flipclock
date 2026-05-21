@@ -210,9 +210,11 @@ class _TimerScreenState extends State<TimerScreen> {
   Widget _countdownWheels(Skin skin, DigitFont font) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Match FlipCardRow's sizing exactly so the wheels and the running
+        // flip cards are the same size (gap = 1/12 width, maxCardWidth 240).
         final gap = constraints.maxWidth / 12;
         final wheelWidth =
-            ((constraints.maxWidth - gap * 2) / 3).clamp(0.0, 150.0);
+            ((constraints.maxWidth - gap * 2) / 3).clamp(0.0, 240.0);
         Widget wheel(int count, int value, ValueChanged<int> onChanged,
             String label) {
           return Column(

@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,16 @@ class FlipclockApp extends StatelessWidget {
           return MaterialApp(
             title: 'Flipclock',
             debugShowCheckedModeBanner: false,
+            // Allow dragging scroll views (e.g. the countdown wheels) with a
+            // mouse/trackpad on web and desktop, not just touch + wheel.
+            scrollBehavior: const MaterialScrollBehavior().copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.trackpad,
+                PointerDeviceKind.stylus,
+              },
+            ),
             theme: ThemeData(
               brightness: Brightness.light,
               colorScheme: ColorScheme.fromSeed(
