@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
@@ -92,39 +93,67 @@ class FlipDigit extends StatefulWidget {
 class _FlipDigitState extends State<FlipDigit>
     with SingleTickerProviderStateMixin {
   late String _current = widget.char;
-  late String _next = widget.char;
-  late final AnimationController _controller;
+  String _next = '';
+  bool _flipping = false;
+  double _progress = 0;
+
+  // The animation is driven by a real-time Stopwatch rather than the ticker's
+  // reported elapsed time: on Flutter web the frame timestamps can run far
+  // faster than wall-clock, which made AnimationController finish in ~40ms
+  // instead of the intended duration. Stopwatch uses the monotonic clock and
+  // is immune to that. The Ticker is used only to request a frame each vsync.
+  late final Ticker _ticker;
+  final Stopwatch _watch = Stopwatch();
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: kFlipDuration)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() => _current = _next);
-          _controller.reset();
-          if (widget.char != _current) {
-            _next = widget.char;
-            _controller.forward();
-          }
-        }
+    _ticker = createTicker(_onTick);
+  }
+
+  void _beginFlip(String to) {
+    _next = to;
+    _flipping = true;
+    _progress = 0;
+    _watch
+      ..reset()
+      ..start();
+    if (!_ticker.isActive) _ticker.start();
+  }
+
+  void _onTick(Duration _) {
+    final ms = _watch.elapsedMilliseconds;
+    final p = (ms / kFlipDuration.inMilliseconds).clamp(0.0, 1.0);
+    setState(() => _progress = p);
+    if (p >= 1.0) {
+      _ticker.stop();
+      _watch
+        ..stop()
+        ..reset();
+      setState(() {
+        _current = _next;
+        _flipping = false;
+        _progress = 0;
       });
+      if (widget.char != _current) _beginFlip(widget.char);
+    }
   }
 
   @override
   void didUpdateWidget(covariant FlipDigit old) {
     super.didUpdateWidget(old);
-    if (widget.char != _current && !_controller.isAnimating) {
-      _next = widget.char;
-      _controller.forward();
-    } else if (_controller.isAnimating) {
-      _next = widget.char;
+    if (widget.char != _current) {
+      if (_flipping) {
+        _next = widget.char; // current flip finishes, then chains to newest
+      } else {
+        _beginFlip(widget.char);
+      }
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -134,16 +163,13 @@ class _FlipDigitState extends State<FlipDigit>
     return SizedBox(
       width: widget.width,
       height: widget.height,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) => _SplitFlap(
-          current: _current,
-          next: _next,
-          skin: widget.skin,
-          textStyle: widget.font.build(fontSize, widget.skin.digitColor),
-          cardSize: Size(widget.width, widget.height),
-          progress: Curves.easeInOut.transform(_controller.value),
-        ),
+      child: _SplitFlap(
+        current: _current,
+        next: _flipping ? _next : _current,
+        skin: widget.skin,
+        textStyle: widget.font.build(fontSize, widget.skin.digitColor),
+        cardSize: Size(widget.width, widget.height),
+        progress: _flipping ? Curves.easeInOut.transform(_progress) : 0,
       ),
     );
   }
