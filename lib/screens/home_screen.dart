@@ -17,16 +17,27 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _tabIndex = 1; // Clock by default
+  late final PageController _pageController =
+      PageController(initialPage: _tabIndex);
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _goToTab(int i) {
+    setState(() => _tabIndex = i);
+    _pageController.animateToPage(
+      i,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final skin = context.watch<AppState>().skin;
-
-    final screens = const [
-      PomodoroScreen(),
-      ClockScreen(),
-      TimerScreen(),
-    ];
 
     return Scaffold(
       backgroundColor: skin.background,
@@ -56,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SegmentedTabs(
                     items: const ['Pomodoro', 'Clock', 'Timer'],
                     selectedIndex: _tabIndex,
-                    onChanged: (i) => setState(() => _tabIndex = i),
+                    onChanged: _goToTab,
                     skin: skin,
                   ),
                   const Spacer(),
@@ -64,7 +75,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            Expanded(child: screens[_tabIndex]),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _tabIndex = i),
+                children: const [
+                  PomodoroScreen(),
+                  ClockScreen(),
+                  TimerScreen(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
