@@ -85,6 +85,62 @@ const Skin nightStarSkin = Skin(
   dividerColor: Color(0xFF2A2342),
 );
 
+const Skin midnightPlumSkin = Skin(
+  id: 'midnight_plum',
+  name: 'Midnight Plum',
+  background: Color(0xFF1E1B2E),
+  cardBackground: Color(0xFF2E2A45),
+  digitColor: Color(0xFFE8B7D4),
+  accentColor: Color(0xFFB69CE8),
+  buttonColor: Color(0xFFD96BA0),
+  buttonTextColor: Color(0xFFFFFFFF),
+  primaryTextColor: Color(0xFFEDE7F5),
+  subTextColor: Color(0xFFA89CC0),
+  dividerColor: Color(0xFF1E1B2E),
+);
+
+const Skin cocoaNightSkin = Skin(
+  id: 'cocoa_night',
+  name: 'Cocoa Night',
+  background: Color(0xFF2B2320),
+  cardBackground: Color(0xFF3D332F),
+  digitColor: Color(0xFFF0C9B0),
+  accentColor: Color(0xFFD9A299),
+  buttonColor: Color(0xFFC97B84),
+  buttonTextColor: Color(0xFFFFFFFF),
+  primaryTextColor: Color(0xFFF0E6DE),
+  subTextColor: Color(0xFFB5A89E),
+  dividerColor: Color(0xFF2B2320),
+);
+
+const Skin galaxySkin = Skin(
+  id: 'galaxy',
+  name: 'Galaxy',
+  background: Color(0xFF161A30),
+  cardBackground: Color(0xFF272C4A),
+  digitColor: Color(0xFFB9C7FF),
+  accentColor: Color(0xFFE0A7E8),
+  buttonColor: Color(0xFF7C8CE0),
+  buttonTextColor: Color(0xFFFFFFFF),
+  primaryTextColor: Color(0xFFE6EAF7),
+  subTextColor: Color(0xFF98A0C2),
+  dividerColor: Color(0xFF161A30),
+);
+
+const Skin charcoalRoseSkin = Skin(
+  id: 'charcoal_rose',
+  name: 'Charcoal Rose',
+  background: Color(0xFF242022),
+  cardBackground: Color(0xFF353033),
+  digitColor: Color(0xFFEAB8C4),
+  accentColor: Color(0xFFC99AA8),
+  buttonColor: Color(0xFFCE7E92),
+  buttonTextColor: Color(0xFFFFFFFF),
+  primaryTextColor: Color(0xFFF0E8EC),
+  subTextColor: Color(0xFFAEA2A8),
+  dividerColor: Color(0xFF242022),
+);
+
 const List<Skin> allSkins = [
   yumekawaSkin,
   lavenderSkin,
@@ -92,6 +148,10 @@ const List<Skin> allSkins = [
   beigeRoseSkin,
   sugarPinkSkin,
   nightStarSkin,
+  midnightPlumSkin,
+  cocoaNightSkin,
+  galaxySkin,
+  charcoalRoseSkin,
 ];
 
 Skin skinById(String id) =>
