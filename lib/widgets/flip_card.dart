@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 
-const Duration kFlipDuration = Duration(milliseconds: 800);
+const Duration kFlipDuration = Duration(milliseconds: 700);
 
 /// A rounded card holding one or more independently-flipping digits.
 /// Only the digits that actually change animate, so e.g. the tens place of
@@ -199,7 +199,7 @@ class _SplitFlap extends StatelessWidget {
             child: Transform(
               alignment: Alignment.bottomCenter,
               transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0035)
+                ..setEntry(3, 2, 0.0040)
                 ..rotateX(-math.pi / 2 * p1),
               child: _Leaf(
                 half: _Half.top,
@@ -217,7 +217,7 @@ class _SplitFlap extends StatelessWidget {
             child: Transform(
               alignment: Alignment.topCenter,
               transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0035)
+                ..setEntry(3, 2, 0.0040)
                 ..rotateX(math.pi / 2 * (1 - p2)),
               child: _Leaf(
                 half: _Half.bottom,
@@ -288,8 +288,8 @@ class _Leaf extends StatelessWidget {
                               ? Alignment.bottomCenter
                               : Alignment.topCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.10 * shade),
-                            Colors.black.withValues(alpha: 0.55 * shade),
+                            Colors.black.withValues(alpha: 0.16 * shade),
+                            Colors.black.withValues(alpha: 0.72 * shade),
                           ],
                         ),
                       ),
