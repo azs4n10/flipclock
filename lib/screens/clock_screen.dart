@@ -61,9 +61,9 @@ class _ClockScreenState extends State<ClockScreen> {
             Text(
               dateText,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 32,
                 color: skin.primaryTextColor,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
               ),
             ),

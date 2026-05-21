@@ -12,7 +12,6 @@ class FlipCardRow extends StatelessWidget {
     required this.font,
     this.labels,
     this.aspectRatio = 0.85,
-    this.spacing = 10,
     this.maxCardWidth = 240,
   });
 
@@ -21,7 +20,6 @@ class FlipCardRow extends StatelessWidget {
   final Skin skin;
   final DigitFont font;
   final double aspectRatio;
-  final double spacing;
   final double maxCardWidth;
 
   @override
@@ -29,7 +27,9 @@ class FlipCardRow extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final available = constraints.maxWidth;
-        final totalSpacing = spacing * (values.length - 1);
+        // Gap between panels ~= 1/12 of the available width.
+        final gap = values.length > 1 ? available / 12 : 0.0;
+        final totalSpacing = gap * (values.length - 1);
         final cardWidth =
             ((available - totalSpacing) / values.length).clamp(0, maxCardWidth);
         final cardHeight = cardWidth / aspectRatio;
@@ -47,7 +47,7 @@ class FlipCardRow extends StatelessWidget {
                     width: cardWidth.toDouble(),
                     height: cardHeight,
                   ),
-                  if (i != values.length - 1) SizedBox(width: spacing),
+                  if (i != values.length - 1) SizedBox(width: gap),
                 ],
               ],
             ),
@@ -70,7 +70,7 @@ class FlipCardRow extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (i != labels!.length - 1) SizedBox(width: spacing),
+                    if (i != labels!.length - 1) SizedBox(width: gap),
                   ],
                 ],
               ),
