@@ -151,17 +151,18 @@ class _TimerScreenState extends State<TimerScreen> {
             const Spacer(),
             if (_mode == TimerMode.countDown && !_running)
               _countdownWheels(skin, font)
-            else ...[
+            else
               FlipCardRow(
                 values: [hh, mm, ss],
                 labels: const ['HOUR', 'MIN', 'SEC'],
                 skin: skin,
                 font: font,
               ),
-              if (showCenti) ...[
-                const SizedBox(height: 14),
-                _CentiReadout(value: cc, skin: skin, font: font),
-              ],
+            // Reserve the centiseconds row in every state so the cards do not
+            // shift vertically between wheel-setup and the running flip.
+            if (showCenti) ...[
+              const SizedBox(height: 14),
+              _CentiReadout(value: cc, skin: skin, font: font),
             ],
             const SizedBox(height: 28),
             Wrap(
@@ -215,6 +216,7 @@ class _TimerScreenState extends State<TimerScreen> {
         final gap = constraints.maxWidth / 12;
         final wheelWidth =
             ((constraints.maxWidth - gap * 2) / 3).clamp(0.0, 240.0);
+        final cardHeight = wheelWidth / 0.85;
         Widget wheel(int count, int value, ValueChanged<int> onChanged,
             String label) {
           return Column(
@@ -222,7 +224,7 @@ class _TimerScreenState extends State<TimerScreen> {
             children: [
               Container(
                 width: wheelWidth,
-                height: wheelWidth / 0.85,
+                height: cardHeight,
                 decoration: BoxDecoration(
                   color: skin.cardBackground,
                   borderRadius: BorderRadius.circular(wheelWidth * 0.15),
@@ -238,38 +240,37 @@ class _TimerScreenState extends State<TimerScreen> {
                 child: CupertinoPicker(
                   scrollController:
                       FixedExtentScrollController(initialItem: value),
-                  itemExtent: wheelWidth * 0.46,
-                  squeeze: 1.1,
-                  diameterRatio: 1.25,
+                  // Item == card height so the selected number is exactly the
+                  // size of the running flip digit (no jump on Start).
+                  itemExtent: cardHeight,
+                  squeeze: 1.0,
+                  diameterRatio: 100,
                   backgroundColor: skin.cardBackground,
                   selectionOverlay: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                            height: 2,
-                            width: wheelWidth,
-                            color: skin.dividerColor),
-                        SizedBox(height: wheelWidth * 0.46 - 4),
-                        Container(
-                            height: 2,
-                            width: wheelWidth,
-                            color: skin.dividerColor),
-                      ],
-                    ),
+                    child: Container(
+                        height: 2, width: wheelWidth, color: skin.dividerColor),
                   ),
                   onSelectedItemChanged: onChanged,
-                  children: List.generate(
-                    count,
-                    (i) => Center(
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: Text(i.toString().padLeft(2, '0'),
-                            style: font.build(
-                                wheelWidth * 0.55, skin.digitColor)),
-                      ),
-                    ),
-                  ),
+                  children: List.generate(count, (i) {
+                    final two = i.toString().padLeft(2, '0');
+                    // Lay out each digit in half the card width, exactly like
+                    // FlipGroup, so the numbers match the running flip.
+                    Widget digit(String ch) => SizedBox(
+                          width: wheelWidth / 2,
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: Text(ch,
+                                  style: font.build(
+                                      cardHeight * 0.92, skin.digitColor)),
+                            ),
+                          ),
+                        );
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [digit(two[0]), digit(two[1])],
+                    );
+                  }),
                 ),
               ),
               const SizedBox(height: 10),
