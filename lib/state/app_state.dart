@@ -7,7 +7,7 @@ import '../theme/skins.dart';
 
 class AppState extends ChangeNotifier {
   AppState._(this._prefs)
-      : _skin = skinById(_prefs.getString(_kSkinId) ?? yumekawaSkin.id),
+      : _skin = skinById(_prefs.getString(_kSkinId) ?? beigeRoseSkin.id),
         _font = fontById(_prefs.getString(_kFontId) ?? allFonts.first.id),
         _focusMinutes = _prefs.getInt(_kFocusMinutes) ?? 25,
         _shortBreakMinutes = _prefs.getInt(_kShortBreakMinutes) ?? 5,
