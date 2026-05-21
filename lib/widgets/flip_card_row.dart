@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import 'flip_card.dart';
 
@@ -8,6 +9,7 @@ class FlipCardRow extends StatelessWidget {
     super.key,
     required this.values,
     required this.skin,
+    required this.font,
     this.labels,
     this.aspectRatio = 0.85,
     this.spacing = 10,
@@ -17,6 +19,7 @@ class FlipCardRow extends StatelessWidget {
   final List<String> values;
   final List<String>? labels;
   final Skin skin;
+  final DigitFont font;
   final double aspectRatio;
   final double spacing;
   final double maxCardWidth;
@@ -37,9 +40,10 @@ class FlipCardRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 for (int i = 0; i < values.length; i++) ...[
-                  FlipCard(
+                  FlipGroup(
                     value: values[i],
                     skin: skin,
+                    font: font,
                     width: cardWidth.toDouble(),
                     height: cardHeight,
                   ),

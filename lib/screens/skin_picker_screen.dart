@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../theme/skins.dart';
 
@@ -29,7 +30,7 @@ class SkinPickerScreen extends StatelessWidget {
         ),
         leadingWidth: 80,
         title: Text(
-          'Change skin',
+          'Appearance',
           style: TextStyle(
             color: skin.primaryTextColor,
             fontWeight: FontWeight.w700,
@@ -37,24 +38,78 @@ class SkinPickerScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: GridView.builder(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 220,
-          mainAxisSpacing: 14,
-          crossAxisSpacing: 14,
-          childAspectRatio: 1.4,
-        ),
-        itemCount: allSkins.length,
-        itemBuilder: (context, i) {
-          final s = allSkins[i];
-          final selected = s.id == skin.id;
-          return _SkinTile(
-            skin: s,
-            selected: selected,
-            onTap: () => state.setSkin(s),
-          );
-        },
+        children: [
+          _SectionTitle('Skin', skin: skin),
+          const SizedBox(height: 10),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 1.4,
+            ),
+            itemCount: allSkins.length,
+            itemBuilder: (context, i) {
+              final s = allSkins[i];
+              return _SkinTile(
+                skin: s,
+                selected: s.id == skin.id,
+                onTap: () => state.setSkin(s),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          _SectionTitle('Number font', skin: skin),
+          const SizedBox(height: 4),
+          Text(
+            "The 8 styles from iPhone's lock screen",
+            style: TextStyle(color: skin.subTextColor, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.5,
+            ),
+            itemCount: allFonts.length,
+            itemBuilder: (context, i) {
+              final f = allFonts[i];
+              return _FontTile(
+                font: f,
+                skin: skin,
+                selected: f.id == state.font.id,
+                onTap: () => state.setFont(f),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.title, {required this.skin});
+
+  final String title;
+  final Skin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: skin.primaryTextColor,
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
       ),
     );
   }
@@ -113,6 +168,58 @@ class _SkinTile extends StatelessWidget {
                 color: skin.primaryTextColor,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FontTile extends StatelessWidget {
+  const _FontTile({
+    required this.font,
+    required this.skin,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final DigitFont font;
+  final Skin skin;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: skin.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? skin.buttonColor : skin.dividerColor,
+            width: selected ? 3 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Center(
+                child: FittedBox(
+                  child: Text('12', style: font.build(48, skin.digitColor)),
+                ),
+              ),
+            ),
+            Text(
+              font.name,
+              style: TextStyle(
+                color: skin.primaryTextColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
             ),
           ],
