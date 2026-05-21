@@ -46,9 +46,13 @@ class _ClockScreenState extends State<ClockScreen> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final skin = appState.skin;
-    final hh = _now.hour.toString().padLeft(2, '0');
+    final hour = appState.use24Hour
+        ? _now.hour
+        : (_now.hour % 12 == 0 ? 12 : _now.hour % 12);
+    final hh = hour.toString().padLeft(2, '0');
     final mm = _now.minute.toString().padLeft(2, '0');
     final ss = _now.second.toString().padLeft(2, '0');
+    final values = appState.showSeconds ? [hh, mm, ss] : [hh, mm];
     final dateText = DateFormat('MMM d, yyyy  EEE').format(_now);
 
     return SafeArea(
@@ -56,21 +60,22 @@ class _ClockScreenState extends State<ClockScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Stack(
           children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: Text(
-                  dateText,
-                  style: TextStyle(
-                    fontSize: 32,
-                    color: skin.primaryTextColor,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+            if (appState.showDate)
+              Align(
+                alignment: Alignment.topCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: Text(
+                    dateText,
+                    style: TextStyle(
+                      fontSize: 32,
+                      color: skin.primaryTextColor,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
-            ),
             Align(
               alignment: Alignment.center,
               child: AnimatedSwitcher(
@@ -90,22 +95,19 @@ class _ClockScreenState extends State<ClockScreen> {
                           key: const ValueKey('portrait'),
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            FlipCardRow(
-                                values: [hh], skin: skin, font: appState.font,
-                                maxCardWidth: 150),
-                            const SizedBox(height: 14),
-                            FlipCardRow(
-                                values: [mm], skin: skin, font: appState.font,
-                                maxCardWidth: 150),
-                            const SizedBox(height: 14),
-                            FlipCardRow(
-                                values: [ss], skin: skin, font: appState.font,
-                                maxCardWidth: 150),
+                            for (int i = 0; i < values.length; i++) ...[
+                              if (i != 0) const SizedBox(height: 14),
+                              FlipCardRow(
+                                  values: [values[i]],
+                                  skin: skin,
+                                  font: appState.font,
+                                  maxCardWidth: 150),
+                            ],
                           ],
                         )
                       : FlipCardRow(
                           key: const ValueKey('landscape'),
-                          values: [hh, mm, ss],
+                          values: values,
                           skin: skin,
                           font: appState.font),
               ),
@@ -115,7 +117,7 @@ class _ClockScreenState extends State<ClockScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 28),
                 child: Text(
-                  'less is more',
+                  appState.signature,
                   style: TextStyle(
                     fontSize: 14,
                     color: skin.subTextColor,

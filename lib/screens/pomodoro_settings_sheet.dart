@@ -20,7 +20,8 @@ class PomodoroSettingsSheet extends StatelessWidget {
           top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
@@ -36,14 +37,40 @@ class PomodoroSettingsSheet extends StatelessWidget {
               ),
             ),
             Text(
-              'Pomodoro Settings',
+              'Settings',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: skin.primaryTextColor,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            _SectionLabel('Display', skin: skin),
+            _ToggleTile(
+              label: '24-hour clock',
+              value: state.use24Hour,
+              onChanged: state.setUse24Hour,
+              skin: skin,
+            ),
+            _ToggleTile(
+              label: 'Show seconds',
+              value: state.showSeconds,
+              onChanged: state.setShowSeconds,
+              skin: skin,
+            ),
+            _ToggleTile(
+              label: 'Show date',
+              value: state.showDate,
+              onChanged: state.setShowDate,
+              skin: skin,
+            ),
+            _SignatureTile(
+              value: state.signature,
+              onChanged: state.setSignature,
+              skin: skin,
+            ),
+            const SizedBox(height: 12),
+            _SectionLabel('Pomodoro', skin: skin),
             _ToggleTile(
               label: 'Remind sound',
               value: state.remindSoundEnabled,
@@ -93,6 +120,110 @@ class PomodoroSettingsSheet extends StatelessWidget {
               suffix: 'focus',
               skin: skin,
             ),
+          ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text, {required this.skin});
+
+  final String text;
+  final Skin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 4, bottom: 4),
+        child: Text(
+          text.toUpperCase(),
+          style: TextStyle(
+            fontSize: 12,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w700,
+            color: skin.subTextColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SignatureTile extends StatelessWidget {
+  const _SignatureTile({
+    required this.value,
+    required this.onChanged,
+    required this.skin,
+  });
+
+  final String value;
+  final ValueChanged<String> onChanged;
+  final Skin skin;
+
+  Future<void> _edit(BuildContext context) async {
+    final controller = TextEditingController(text: value);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: skin.cardBackground,
+        title: Text('Signature',
+            style: TextStyle(color: skin.primaryTextColor)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 40,
+          style: TextStyle(color: skin.primaryTextColor),
+          cursorColor: skin.buttonColor,
+          decoration: InputDecoration(
+            hintText: 'less is more',
+            hintStyle: TextStyle(color: skin.subTextColor),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: TextStyle(color: skin.subTextColor)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child:
+                Text('OK', style: TextStyle(color: skin.buttonColor)),
+          ),
+        ],
+      ),
+    );
+    if (result != null) onChanged(result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _edit(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text('Signature',
+                  style: TextStyle(
+                      fontSize: 15, color: skin.primaryTextColor)),
+            ),
+            Flexible(
+              child: Text(
+                value.isEmpty ? '(none)' : value,
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 14, color: skin.subTextColor),
+              ),
+            ),
+            Icon(Icons.chevron_right, color: skin.subTextColor, size: 20),
           ],
         ),
       ),
