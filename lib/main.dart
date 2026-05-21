@@ -45,6 +45,14 @@ class FlipclockApp extends StatelessWidget {
               ),
               useMaterial3: true,
             ),
+            // Keep UI animations on even when the user enables the OS
+            // "reduce motion" setting (which otherwise zeroes implicit
+            // animation durations). The flip itself is driven by a real-time
+            // Stopwatch, so it plays regardless.
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: false),
+              child: child!,
+            ),
             home: const HomeScreen(),
           );
         },
