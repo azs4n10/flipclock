@@ -68,7 +68,25 @@ class _ClockScreenState extends State<ClockScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            FlipCardRow(values: [hh, mm, ss], skin: skin, font: appState.font),
+            if (MediaQuery.of(context).orientation == Orientation.portrait)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FlipCardRow(
+                      values: [hh], skin: skin, font: appState.font,
+                      maxCardWidth: 150),
+                  const SizedBox(height: 14),
+                  FlipCardRow(
+                      values: [mm], skin: skin, font: appState.font,
+                      maxCardWidth: 150),
+                  const SizedBox(height: 14),
+                  FlipCardRow(
+                      values: [ss], skin: skin, font: appState.font,
+                      maxCardWidth: 150),
+                ],
+              )
+            else
+              FlipCardRow(values: [hh, mm, ss], skin: skin, font: appState.font),
             const SizedBox(height: 28),
             Text(
               'less is more',
