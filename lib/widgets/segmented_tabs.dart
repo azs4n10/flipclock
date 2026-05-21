@@ -36,7 +36,7 @@ class SegmentedTabs extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               decoration: BoxDecoration(
-                color: selected ? skin.accentColor : Colors.transparent,
+                color: selected ? skin.buttonColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(

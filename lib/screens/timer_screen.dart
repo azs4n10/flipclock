@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,10 @@ class _TimerScreenState extends State<TimerScreen> {
   DateTime? _startedAt;
 
   Duration _countDownInitial = const Duration(minutes: 10);
+  // Count Down length set via the iOS-style scroll wheels.
+  int _cdH = 0;
+  int _cdM = 10;
+  int _cdS = 0;
   DateTime _targetTime = DateTime.now().add(const Duration(hours: 1));
 
   @override
@@ -55,6 +60,11 @@ class _TimerScreenState extends State<TimerScreen> {
       _ticker?.cancel();
       setState(() => _running = false);
       return;
+    }
+    if (_mode == TimerMode.countDown) {
+      _countDownInitial =
+          Duration(hours: _cdH, minutes: _cdM, seconds: _cdS);
+      if (_countDownInitial == Duration.zero) return; // nothing to count down
     }
     _startedAt = DateTime.now();
     _ticker?.cancel();
@@ -139,15 +149,19 @@ class _TimerScreenState extends State<TimerScreen> {
             const SizedBox(height: 24),
             _modeConfig(skin),
             const Spacer(),
-            FlipCardRow(
-              values: [hh, mm, ss],
-              labels: const ['HOUR', 'MIN', 'SEC'],
-              skin: skin,
-              font: font,
-            ),
-            if (showCenti) ...[
-              const SizedBox(height: 14),
-              _CentiReadout(value: cc, skin: skin, font: font),
+            if (_mode == TimerMode.countDown && !_running)
+              _countdownWheels(skin, font)
+            else ...[
+              FlipCardRow(
+                values: [hh, mm, ss],
+                labels: const ['HOUR', 'MIN', 'SEC'],
+                skin: skin,
+                font: font,
+              ),
+              if (showCenti) ...[
+                const SizedBox(height: 14),
+                _CentiReadout(value: cc, skin: skin, font: font),
+              ],
             ],
             const SizedBox(height: 28),
             Wrap(
@@ -184,52 +198,107 @@ class _TimerScreenState extends State<TimerScreen> {
           style: TextStyle(color: skin.subTextColor, fontSize: 13),
         );
       case TimerMode.countDown:
-        return _countDownConfig(skin);
+        return Text(
+          _running ? '' : 'Scroll to set the length',
+          style: TextStyle(color: skin.subTextColor, fontSize: 13),
+        );
       case TimerMode.targetTime:
         return _targetTimeConfig(skin);
     }
   }
 
-  Widget _countDownConfig(Skin skin) {
-    final minutes = _countDownInitial.inMinutes;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: skin.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: skin.dividerColor),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Length: ',
-            style: TextStyle(color: skin.primaryTextColor, fontSize: 14),
-          ),
-          IconButton(
-            icon: Icon(Icons.remove_circle_outline, color: skin.accentColor),
-            onPressed: minutes > 1 && !_running
-                ? () => setState(
-                    () => _countDownInitial = Duration(minutes: minutes - 1))
-                : null,
-          ),
-          Text(
-            '$minutes min',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: skin.digitColor,
-              fontSize: 16,
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.add_circle_outline, color: skin.accentColor),
-            onPressed: !_running
-                ? () => setState(
-                    () => _countDownInitial = Duration(minutes: minutes + 1))
-                : null,
-          ),
-        ],
-      ),
+  Widget _countdownWheels(Skin skin, DigitFont font) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gap = constraints.maxWidth / 12;
+        final wheelWidth =
+            ((constraints.maxWidth - gap * 2) / 3).clamp(0.0, 150.0);
+        Widget wheel(int count, int value, ValueChanged<int> onChanged,
+            String label) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: wheelWidth,
+                height: wheelWidth / 0.85,
+                decoration: BoxDecoration(
+                  color: skin.cardBackground,
+                  borderRadius: BorderRadius.circular(wheelWidth * 0.15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: skin.accentColor.withValues(alpha: 0.18),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: CupertinoPicker(
+                  scrollController:
+                      FixedExtentScrollController(initialItem: value),
+                  itemExtent: wheelWidth * 0.46,
+                  squeeze: 1.1,
+                  diameterRatio: 1.25,
+                  backgroundColor: skin.cardBackground,
+                  selectionOverlay: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                            height: 2,
+                            width: wheelWidth,
+                            color: skin.dividerColor),
+                        SizedBox(height: wheelWidth * 0.46 - 4),
+                        Container(
+                            height: 2,
+                            width: wheelWidth,
+                            color: skin.dividerColor),
+                      ],
+                    ),
+                  ),
+                  onSelectedItemChanged: onChanged,
+                  children: List.generate(
+                    count,
+                    (i) => Center(
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(i.toString().padLeft(2, '0'),
+                            style: font.build(
+                                wheelWidth * 0.55, skin.digitColor)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: wheelWidth,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: skin.subTextColor,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            wheel(24, _cdH, (v) => setState(() => _cdH = v), 'HOUR'),
+            SizedBox(width: gap),
+            wheel(60, _cdM, (v) => setState(() => _cdM = v), 'MIN'),
+            SizedBox(width: gap),
+            wheel(60, _cdS, (v) => setState(() => _cdS = v), 'SEC'),
+          ],
+        );
+      },
     );
   }
 
