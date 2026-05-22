@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -55,13 +56,15 @@ class _ClockScreenState extends State<ClockScreen> {
     final values = appState.showSeconds ? [hh, mm, ss] : [hh, mm];
     final dateText = DateFormat('MMM d, yyyy  EEE').format(_now);
 
+    const aspect = 0.85; // card height = width / aspect
+    const rowGap = 14.0;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Spacer(),
+            const SizedBox(height: 8),
             if (appState.showDate) ...[
               Text(
                 dateText,
@@ -72,32 +75,41 @@ class _ClockScreenState extends State<ClockScreen> {
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
             ],
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 450),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.92, end: 1.0).animate(animation),
-                  child: child,
-                ),
-              ),
-              child:
-                  MediaQuery.of(context).orientation == Orientation.portrait
+            // Fill the leftover space; size the cards so the whole flip fits
+            // both the available width AND height (responsive to screen size,
+            // seconds on/off, and font scale).
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  final portrait = MediaQuery.of(context).orientation ==
+                      Orientation.portrait;
+                  double maxCW;
+                  if (portrait) {
+                    final rows = values.length;
+                    final hPer =
+                        (c.maxHeight - rowGap * (rows - 1)) / rows * 0.98;
+                    maxCW = math.min(
+                        150 * appState.fontScale, math.min(hPer * aspect, c.maxWidth));
+                  } else {
+                    maxCW = math.min(
+                        240 * appState.fontScale, c.maxHeight * aspect * 0.94);
+                  }
+                  maxCW = math.max(24.0, maxCW);
+
+                  final flip = portrait
                       ? Column(
                           key: const ValueKey('portrait'),
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             for (int i = 0; i < values.length; i++) ...[
-                              if (i != 0) const SizedBox(height: 14),
+                              if (i != 0) const SizedBox(height: rowGap),
                               FlipCardRow(
                                   values: [values[i]],
                                   skin: skin,
                                   font: appState.font,
-                                  maxCardWidth: 150 * appState.fontScale),
+                                  maxCardWidth: maxCW),
                             ],
                           ],
                         )
@@ -106,9 +118,28 @@ class _ClockScreenState extends State<ClockScreen> {
                           values: values,
                           skin: skin,
                           font: appState.font,
-                          maxCardWidth: 240 * appState.fontScale),
+                          maxCardWidth: maxCW);
+
+                  return Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(begin: 0.92, end: 1.0)
+                              .animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: flip,
+                    ),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
             Text(
               appState.signature,
               style: TextStyle(
@@ -118,7 +149,7 @@ class _ClockScreenState extends State<ClockScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 8),
           ],
         ),
       ),
