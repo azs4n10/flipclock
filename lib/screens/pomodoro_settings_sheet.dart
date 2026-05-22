@@ -380,8 +380,19 @@ class _ToggleTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: skin.digitColor,
-            activeTrackColor: skin.accentColor,
+            // Material 3 ignores activeThumbColor for the knob, so set the
+            // thumb explicitly via a state resolver: digit color when on.
+            thumbColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? skin.digitColor
+                  : skin.subTextColor,
+            ),
+            trackColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? skin.accentColor
+                  : skin.cardBackground,
+            ),
+            trackOutlineColor: WidgetStateProperty.all(skin.dividerColor),
           ),
         ],
       ),
