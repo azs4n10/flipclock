@@ -21,37 +21,30 @@ def render(card_margin, with_bg, out):
     d = ImageDraw.Draw(img)
 
     m = card_margin
-    card = [m, m + SIZE * 0.06, SIZE - m, SIZE - m - SIZE * 0.06]
-    rounded(d, card, radius=int(SIZE * 0.14), fill=CARD)
-    cy = (card[1] + card[3]) / 2
+    x0, x1 = m, SIZE - m
+    y0, y1 = m + SIZE * 0.06, SIZE - m - SIZE * 0.06
+    cy = (y0 + y1) / 2
+    radius = int(SIZE * 0.14)
+    gap = SIZE * 0.012  # small seam between the two flaps
 
-    # "12" centered (drawn first; the split seam is layered on top so the
-    # digits are visibly cut in half like a real flip clock).
-    font = ImageFont.truetype(FONT_PATH, int(SIZE * 0.42))
+    # Two stacked flaps (top + bottom) with a thin seam between them — the
+    # shape of a real split-flap card. Outer corners rounded, inner edges flat.
+    d.rounded_rectangle([x0, y0, x1, cy - gap], radius=radius, fill=CARD,
+                        corners=(True, True, False, False))
+    d.rounded_rectangle([x0, cy + gap, x1, y1], radius=radius, fill=CARD,
+                        corners=(False, False, True, True))
+    # soft shadow cast by the top flap onto the bottom flap
+    d.rectangle([x0, cy + gap, x1, cy + gap + SIZE * 0.012], fill=(0, 0, 0, 28))
+
+    # "12" centered, then re-cut the seam over it so the digits split.
+    font = ImageFont.truetype(FONT_PATH, int(SIZE * 0.40))
     text = "12"
     bbox = d.textbbox((0, 0), text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    d.text(
-        ((SIZE - tw) / 2 - bbox[0], cy - th / 2 - bbox[1]),
-        text,
-        font=font,
-        fill=DIGIT,
-    )
-
-    # Split seam over the digits + a soft shadow under the top flap for depth.
-    gap = SIZE * 0.012
-    d.rectangle([card[0], cy - gap, card[2], cy + gap], fill=BG)
-    d.rectangle([card[0], cy + gap, card[2], cy + gap + SIZE * 0.008],
-                fill=(0, 0, 0, 38))
-
-    # Side hinges (the flip mechanism) at the seam, left and right.
-    hw, hh = SIZE * 0.045, SIZE * 0.085
-    d.rounded_rectangle(
-        [card[0] - hw * 0.35, cy - hh / 2, card[0] + hw * 0.65, cy + hh / 2],
-        radius=hw * 0.35, fill=DIGIT)
-    d.rounded_rectangle(
-        [card[2] - hw * 0.65, cy - hh / 2, card[2] + hw * 0.35, cy + hh / 2],
-        radius=hw * 0.35, fill=DIGIT)
+    d.text(((SIZE - tw) / 2 - bbox[0], cy - th / 2 - bbox[1]), text,
+           font=font, fill=DIGIT)
+    d.rectangle([x0, cy - gap, x1, cy + gap], fill=BG)
+    d.rectangle([x0, cy + gap, x1, cy + gap + SIZE * 0.012], fill=(0, 0, 0, 28))
 
     img.save(out)
     print("wrote", out)
