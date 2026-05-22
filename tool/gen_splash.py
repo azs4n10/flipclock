@@ -62,7 +62,7 @@ def make_logo(out):
     d.rounded_rectangle(card, radius=radius, fill=(247, 237, 227, 255))
 
     cy = (card[1] + card[3]) // 2
-    font = ImageFont.truetype(FONT, 240)
+    font = ImageFont.truetype(FONT, 340)
     bbox = d.textbbox((0, 0), "12", font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     d.text((s / 2 - tw / 2 - bbox[0], cy - th / 2 - bbox[1]), "12",
