@@ -5,6 +5,7 @@ import '../state/app_state.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../theme/skins.dart';
+import 'custom_color_screen.dart';
 
 class SkinPickerScreen extends StatelessWidget {
   const SkinPickerScreen({super.key});
@@ -52,8 +53,39 @@ class SkinPickerScreen extends StatelessWidget {
               crossAxisSpacing: 14,
               childAspectRatio: 1.4,
             ),
-            itemCount: allSkins.length,
+            itemCount: allSkins.length + 1,
             itemBuilder: (context, i) {
+              if (i == allSkins.length) {
+                // The editable "Custom" skin, built from the user's colors.
+                return _SkinTile(
+                  skin: state.isCustomSkin
+                      ? skin
+                      : Skin(
+                          id: 'custom',
+                          name: 'Custom',
+                          background: state.customBg,
+                          cardBackground: state.customCard,
+                          digitColor: state.customDigit,
+                          accentColor: state.customAccent,
+                          buttonColor: state.customAccent,
+                          buttonTextColor: Colors.white,
+                          primaryTextColor: state.customDigit,
+                          subTextColor: state.customDigit,
+                          dividerColor: state.customCard,
+                        ),
+                  selected: state.isCustomSkin,
+                  trailingEdit: true,
+                  onTap: () {
+                    state.setSkinId('custom');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CustomColorScreen(),
+                      ),
+                    );
+                  },
+                );
+              }
               final s = allSkins[i];
               return _SkinTile(
                 skin: s,
@@ -120,11 +152,13 @@ class _SkinTile extends StatelessWidget {
     required this.skin,
     required this.selected,
     required this.onTap,
+    this.trailingEdit = false,
   });
 
   final Skin skin;
   final bool selected;
   final VoidCallback onTap;
+  final bool trailingEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -148,16 +182,27 @@ class _SkinTile extends StatelessWidget {
                   color: skin.cardBackground,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Center(
-                  child: Text(
-                    '12 : 34',
-                    style: TextStyle(
-                      color: skin.digitColor,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 28,
-                      letterSpacing: -1,
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(
+                        '12 : 34',
+                        style: TextStyle(
+                          color: skin.digitColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 28,
+                          letterSpacing: -1,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (trailingEdit)
+                      Positioned(
+                        right: 6,
+                        bottom: 6,
+                        child: Icon(Icons.edit,
+                            size: 16, color: skin.digitColor),
+                      ),
+                  ],
                 ),
               ),
             ),
