@@ -389,7 +389,7 @@ class _ToggleTile extends StatelessWidget {
             ),
             trackColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected)
-                  ? skin.accentColor
+                  ? skin.buttonColor
                   : skin.cardBackground,
             ),
             trackOutlineColor: WidgetStateProperty.all(skin.dividerColor),
