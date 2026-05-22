@@ -23,12 +23,10 @@ def render(card_margin, with_bg, out):
     m = card_margin
     card = [m, m + SIZE * 0.06, SIZE - m, SIZE - m - SIZE * 0.06]
     rounded(d, card, radius=int(SIZE * 0.14), fill=CARD)
-
-    # divider through the middle of the card
     cy = (card[1] + card[3]) / 2
-    d.rectangle([card[0], cy - 4, card[2], cy + 4], fill=DIVIDER)
 
-    # "12" centered
+    # "12" centered (drawn first; the split seam is layered on top so the
+    # digits are visibly cut in half like a real flip clock).
     font = ImageFont.truetype(FONT_PATH, int(SIZE * 0.42))
     text = "12"
     bbox = d.textbbox((0, 0), text, font=font)
@@ -39,6 +37,21 @@ def render(card_margin, with_bg, out):
         font=font,
         fill=DIGIT,
     )
+
+    # Split seam over the digits + a soft shadow under the top flap for depth.
+    gap = SIZE * 0.012
+    d.rectangle([card[0], cy - gap, card[2], cy + gap], fill=BG)
+    d.rectangle([card[0], cy + gap, card[2], cy + gap + SIZE * 0.008],
+                fill=(0, 0, 0, 38))
+
+    # Side hinges (the flip mechanism) at the seam, left and right.
+    hw, hh = SIZE * 0.045, SIZE * 0.085
+    d.rounded_rectangle(
+        [card[0] - hw * 0.35, cy - hh / 2, card[0] + hw * 0.65, cy + hh / 2],
+        radius=hw * 0.35, fill=DIGIT)
+    d.rounded_rectangle(
+        [card[2] - hw * 0.65, cy - hh / 2, card[2] + hw * 0.35, cy + hh / 2],
+        radius=hw * 0.35, fill=DIGIT)
 
     img.save(out)
     print("wrote", out)
