@@ -57,7 +57,7 @@ flutter_launcher_icons:
   web:
     generate: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#F5EBE0"
+  adaptive_icon_background: "#E8D5C4"
   adaptive_icon_foreground: "assets/icon/app_icon_fg.png"
 
 flutter_native_splash:
