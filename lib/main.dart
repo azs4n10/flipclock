@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/home_screen.dart';
@@ -50,7 +51,10 @@ class FlipclockApp extends StatelessWidget {
                 surface: skin.background,
               ),
               scaffoldBackgroundColor: skin.background,
-              textTheme: const TextTheme().apply(
+              // App-wide UI font: a soft rounded sans (tabs, buttons, labels,
+              // settings). Headings (date / Focus / signature) override this
+              // with Playfair Display.
+              textTheme: GoogleFonts.quicksandTextTheme().apply(
                 bodyColor: skin.primaryTextColor,
                 displayColor: skin.primaryTextColor,
               ),
