@@ -3,13 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-enum Season { spring, summer, autumn, winter }
+// Motifs roughly follow the Japanese calendar: cherry blossoms only in the
+// short Mar–Apr bloom, fresh green for May–Jun, bubbles in midsummer, maple
+// leaves in autumn, snow in winter.
+enum Season { sakura, fresh, summer, autumn, winter }
 
 Season seasonForMonth(int month) {
-  if (month >= 3 && month <= 5) return Season.spring;
-  if (month >= 6 && month <= 8) return Season.summer;
+  if (month == 3 || month == 4) return Season.sakura;
+  if (month == 5 || month == 6) return Season.fresh;
+  if (month == 7 || month == 8) return Season.summer;
   if (month >= 9 && month <= 11) return Season.autumn;
-  return Season.winter;
+  return Season.winter; // 12, 1, 2
 }
 
 class _SeasonConfig {
@@ -33,16 +37,26 @@ class _SeasonConfig {
   final double maxSpeed;
 }
 
-enum _Shape { petal, leaf, snow, bubble }
+enum _Shape { sakura, leaf, snow, bubble }
 
 const Map<Season, _SeasonConfig> _configs = {
-  Season.spring: _SeasonConfig(
+  Season.sakura: _SeasonConfig(
     count: 18,
     colors: [Color(0xFFF8A5C2), Color(0xFFFFC0E2), Color(0xFFFFD6E8)],
-    shape: _Shape.petal,
+    shape: _Shape.sakura,
     rising: false,
-    minSize: 9,
-    maxSize: 16,
+    minSize: 12,
+    maxSize: 20,
+    minSpeed: 0.05,
+    maxSpeed: 0.10,
+  ),
+  Season.fresh: _SeasonConfig(
+    count: 16,
+    colors: [Color(0xFFA8D5A2), Color(0xFFC3E6B4), Color(0xFF9FCF8E)],
+    shape: _Shape.leaf,
+    rising: false,
+    minSize: 10,
+    maxSize: 18,
     minSpeed: 0.05,
     maxSpeed: 0.10,
   ),
@@ -195,12 +209,18 @@ class _SeasonalPainter extends CustomPainter {
         canvas.drawCircle(Offset.zero, s / 2, paint);
         paint.style = PaintingStyle.fill;
         break;
-      case _Shape.petal:
-        // Soft oval petal.
-        canvas.drawOval(
-          Rect.fromCenter(center: Offset.zero, width: s, height: s * 0.6),
-          paint,
-        );
+      case _Shape.sakura:
+        // Cherry-blossom petal: rounded body with a small notch at the tip.
+        final h = s * 0.5;
+        final w = s * 0.42;
+        final path = Path()
+          ..moveTo(0, h) // base (stem end)
+          ..cubicTo(w, h * 0.4, w, -h * 0.55, w * 0.32, -h)
+          ..lineTo(0, -h * 0.7) // notch in
+          ..lineTo(-w * 0.32, -h)
+          ..cubicTo(-w, -h * 0.55, -w, h * 0.4, 0, h)
+          ..close();
+        canvas.drawPath(path, paint);
         break;
       case _Shape.leaf:
         final path = Path()

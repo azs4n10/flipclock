@@ -83,6 +83,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: skin.background,
+                      // Cap the height so a tappable scrim stays at the top
+                      // (tap outside to dismiss), plus the X button in the sheet.
+                      constraints: BoxConstraints(
+                        maxHeight:
+                            MediaQuery.of(context).size.height * 0.85,
+                      ),
                       shape: const RoundedRectangleBorder(
                         borderRadius:
                             BorderRadius.vertical(top: Radius.circular(24)),
