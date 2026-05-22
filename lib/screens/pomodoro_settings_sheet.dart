@@ -22,8 +22,7 @@ class PomodoroSettingsSheet extends StatelessWidget {
           top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        child: SingleChildScrollView(
-          child: Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -60,6 +59,11 @@ class PomodoroSettingsSheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
             _SectionLabel('Display', skin: skin),
             _ToggleTile(
               label: '24-hour clock',
@@ -180,8 +184,11 @@ class PomodoroSettingsSheet extends StatelessWidget {
               onTap: AppActions.rate,
               skin: skin,
             ),
+                  ],
+                ),
+              ),
+            ),
           ],
-          ),
         ),
       ),
     );
@@ -240,7 +247,7 @@ class _SignatureTile extends StatelessWidget {
           style: TextStyle(color: skin.primaryTextColor),
           cursorColor: skin.buttonColor,
           decoration: InputDecoration(
-            hintText: 'less is more',
+            hintText: 'take your time',
             hintStyle: TextStyle(color: skin.subTextColor),
           ),
         ),
