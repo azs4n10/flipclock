@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -137,72 +138,61 @@ class _TimerScreenState extends State<TimerScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Stack(
+        child: Column(
           children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SegmentedTabs(
-                      items: const ['Count Up', 'Count Down', 'Target'],
-                      selectedIndex: _mode.index,
-                      onChanged: (i) => _switchMode(TimerMode.values[i]),
-                      skin: skin,
-                    ),
-                    const SizedBox(height: 16),
-                    _modeConfig(skin),
-                  ],
-                ),
+            const SizedBox(height: 8),
+            SegmentedTabs(
+              items: const ['Count Up', 'Count Down', 'Target'],
+              selectedIndex: _mode.index,
+              onChanged: (i) => _switchMode(TimerMode.values[i]),
+              skin: skin,
+            ),
+            const SizedBox(height: 16),
+            _modeConfig(skin),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  // Reserve a little for the HOUR/MIN/SEC labels, then fit the
+                  // cards/wheels into the remaining height.
+                  final limit = math.max(
+                      24.0, math.min(240.0, (c.maxHeight - 36) * 0.85));
+                  final center = _mode == TimerMode.countDown && !_running
+                      ? _countdownWheels(skin, font, limit)
+                      : FlipCardRow(
+                          values: [hh, mm, ss],
+                          labels: const ['HOUR', 'MIN', 'SEC'],
+                          skin: skin,
+                          font: font,
+                          maxCardWidth: limit,
+                        );
+                  return Center(child: center);
+                },
               ),
             ),
-            Align(
-              alignment: Alignment.center,
-              child: _mode == TimerMode.countDown && !_running
-                  ? _countdownWheels(skin, font)
-                  : FlipCardRow(
-                      values: [hh, mm, ss],
-                      labels: const ['HOUR', 'MIN', 'SEC'],
-                      skin: skin,
-                      font: font,
-                    ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (showCenti) ...[
-                      _CentiReadout(value: cc, skin: skin, font: font),
-                      const SizedBox(height: 16),
-                    ],
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        PillButton(
-                          label: _running ? 'Pause' : 'Start',
-                          onPressed: _toggleStart,
-                          skin: skin,
-                          icon: _running ? Icons.pause : Icons.play_arrow,
-                        ),
-                        PillButton(
-                          label: 'Reset',
-                          onPressed: _reset,
-                          skin: skin,
-                          outlined: true,
-                        ),
-                      ],
-                    ),
-                  ],
+            if (showCenti) ...[
+              _CentiReadout(value: cc, skin: skin, font: font),
+              const SizedBox(height: 16),
+            ],
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                PillButton(
+                  label: _running ? 'Pause' : 'Start',
+                  onPressed: _toggleStart,
+                  skin: skin,
+                  icon: _running ? Icons.pause : Icons.play_arrow,
                 ),
-              ),
+                PillButton(
+                  label: 'Reset',
+                  onPressed: _reset,
+                  skin: skin,
+                  outlined: true,
+                ),
+              ],
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -226,14 +216,15 @@ class _TimerScreenState extends State<TimerScreen> {
     }
   }
 
-  Widget _countdownWheels(Skin skin, DigitFont font) {
+  Widget _countdownWheels(Skin skin, DigitFont font, double maxWheelWidth) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Match FlipCardRow's sizing exactly so the wheels and the running
-        // flip cards are the same size (gap = 1/12 width, maxCardWidth 240).
+        // Match FlipCardRow's sizing so the wheels and the running flip cards
+        // are the same size; also cap by the height-derived limit.
         final gap = constraints.maxWidth / 12 * 0.7;
         final wheelWidth =
-            ((constraints.maxWidth - gap * 2) / 3).clamp(0.0, 240.0);
+            math.min((constraints.maxWidth - gap * 2) / 3, maxWheelWidth)
+                .clamp(0.0, 240.0);
         final cardHeight = wheelWidth / 0.85;
         Widget wheel(int count, int value, ValueChanged<int> onChanged,
             String label) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -111,79 +112,72 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Stack(
+        child: Column(
           children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: Text(
-                  _phaseLabel(),
-                  style: TextStyle(
-                    fontSize: 32,
-                    letterSpacing: 3,
-                    color: skin.primaryTextColor,
-                    fontWeight: FontWeight.w600,
+            const SizedBox(height: 16),
+            Text(
+              _phaseLabel(),
+              style: TextStyle(
+                fontSize: 32,
+                letterSpacing: 3,
+                color: skin.primaryTextColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  // Fit the MM:SS cards into the available height too.
+                  final maxCW = math.max(
+                      24.0, math.min(280.0, c.maxHeight * 0.85 * 0.94));
+                  return Center(
+                    child: FlipCardRow(
+                      values: [mm, ss],
+                      skin: skin,
+                      font: state.font,
+                      maxCardWidth: maxCW,
+                    ),
+                  );
+                },
+              ),
+            ),
+            Text(
+              'Completed: $_completedFocus',
+              style: TextStyle(
+                color: skin.subTextColor,
+                fontSize: 12,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                if (_running)
+                  PillButton(
+                    label: 'Pause',
+                    onPressed: _pause,
+                    skin: skin,
+                    icon: Icons.pause,
+                  )
+                else
+                  PillButton(
+                    label: 'Start ${_phaseLabel()}',
+                    onPressed: _start,
+                    skin: skin,
+                    icon: Icons.play_arrow,
                   ),
+                PillButton(
+                  label: 'Reset',
+                  onPressed: _reset,
+                  skin: skin,
+                  outlined: true,
                 ),
-              ),
+              ],
             ),
-            Align(
-              alignment: Alignment.center,
-              child: FlipCardRow(
-                values: [mm, ss],
-                skin: skin,
-                font: state.font,
-                maxCardWidth: 280,
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Completed: $_completedFocus',
-                      style: TextStyle(
-                        color: skin.subTextColor,
-                        fontSize: 12,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        if (_running)
-                          PillButton(
-                            label: 'Pause',
-                            onPressed: _pause,
-                            skin: skin,
-                            icon: Icons.pause,
-                          )
-                        else
-                          PillButton(
-                            label: 'Start ${_phaseLabel()}',
-                            onPressed: _start,
-                            skin: skin,
-                            icon: Icons.play_arrow,
-                          ),
-                        PillButton(
-                          label: 'Reset',
-                          onPressed: _reset,
-                          skin: skin,
-                          outlined: true,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
