@@ -1,8 +1,5 @@
-"""Generate a nicer splash screen: a soft pastel gradient background with a few
-petals, a white flip-card 'logo' showing 12, and an app-name branding strip."""
-import math
-import random
-
+"""Generate the splash screen: a clean pastel gradient background, a warm
+flip-card 'logo' showing 12, and an app-name branding strip."""
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 FONT = "C:/Windows/Fonts/arialbd.ttf"
@@ -25,18 +22,7 @@ def make_background(out):
              lerp(top[2], bot[2], t))
         for x in range(w):
             px[x, y] = c
-    # faint sakura petals scattered softly
-    overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    od = ImageDraw.Draw(overlay)
-    random.seed(7)
-    for _ in range(26):
-        cx, cy = random.randint(0, w), random.randint(0, h)
-        s = random.randint(26, 60)
-        col = random.choice([(248, 165, 194, 60), (255, 192, 226, 55),
-                              (255, 214, 232, 60)])
-        od.ellipse([cx - s, cy - s * 0.6, cx + s, cy + s * 0.6], fill=col)
-    overlay = overlay.filter(ImageFilter.GaussianBlur(2))
-    img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+    # Clean pastel gradient only — no decorative shapes.
     img.save(out)
     print("wrote", out)
 
