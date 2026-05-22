@@ -272,11 +272,15 @@ class _TimerScreenState extends State<TimerScreen> {
                               vertical: cardHeight * 0.10,
                             ),
                             child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.contain,
-                                child: Text(ch,
-                                    style: font.build(
-                                        cardHeight * 0.92, skin.digitColor)),
+                              child: Transform.translate(
+                                offset:
+                                    Offset(0, font.centerBias * cardHeight),
+                                child: FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: Text(ch,
+                                      style: font.build(
+                                          cardHeight * 0.92, skin.digitColor)),
+                                ),
                               ),
                             ),
                           ),

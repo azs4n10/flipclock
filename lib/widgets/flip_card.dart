@@ -169,6 +169,7 @@ class _FlipDigitState extends State<FlipDigit>
         skin: widget.skin,
         textStyle: widget.font.build(fontSize, widget.skin.digitColor),
         cardSize: Size(widget.width, widget.height),
+        centerBias: widget.font.centerBias,
         progress: _flipping ? Curves.easeInOut.transform(_progress) : 0,
       ),
     );
@@ -182,6 +183,7 @@ class _SplitFlap extends StatelessWidget {
     required this.skin,
     required this.textStyle,
     required this.cardSize,
+    required this.centerBias,
     required this.progress,
   });
 
@@ -190,6 +192,7 @@ class _SplitFlap extends StatelessWidget {
   final Skin skin;
   final TextStyle textStyle;
   final Size cardSize;
+  final double centerBias;
   final double progress;
 
   @override
@@ -208,6 +211,7 @@ class _SplitFlap extends StatelessWidget {
             skin: skin,
             textStyle: textStyle,
             cardSize: cardSize,
+            centerBias: centerBias,
           ),
         ),
         Align(
@@ -218,6 +222,7 @@ class _SplitFlap extends StatelessWidget {
             skin: skin,
             textStyle: textStyle,
             cardSize: cardSize,
+            centerBias: centerBias,
           ),
         ),
         if (flipping && progress < 0.5)
@@ -233,6 +238,7 @@ class _SplitFlap extends StatelessWidget {
                 skin: skin,
                 textStyle: textStyle,
                 cardSize: cardSize,
+                centerBias: centerBias,
                 shade: p1,
               ),
             ),
@@ -250,6 +256,7 @@ class _SplitFlap extends StatelessWidget {
                 skin: skin,
                 textStyle: textStyle,
                 cardSize: cardSize,
+                centerBias: centerBias,
                 shade: 1 - p2,
               ),
             ),
@@ -268,6 +275,7 @@ class _Leaf extends StatelessWidget {
     required this.skin,
     required this.textStyle,
     required this.cardSize,
+    required this.centerBias,
     this.shade = 0,
   });
 
@@ -276,6 +284,7 @@ class _Leaf extends StatelessWidget {
   final Skin skin;
   final TextStyle textStyle;
   final Size cardSize;
+  final double centerBias;
   final double shade;
 
   @override
@@ -302,9 +311,12 @@ class _Leaf extends StatelessWidget {
                     vertical: cardSize.height * 0.10,
                   ),
                   child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Text(digit, style: textStyle),
+                    child: Transform.translate(
+                      offset: Offset(0, centerBias * cardSize.height),
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(digit, style: textStyle),
+                      ),
                     ),
                   ),
                 ),
