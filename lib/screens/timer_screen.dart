@@ -231,7 +231,7 @@ class _TimerScreenState extends State<TimerScreen> {
       builder: (context, constraints) {
         // Match FlipCardRow's sizing exactly so the wheels and the running
         // flip cards are the same size (gap = 1/12 width, maxCardWidth 240).
-        final gap = constraints.maxWidth / 12;
+        final gap = constraints.maxWidth / 12 * 0.7;
         final wheelWidth =
             ((constraints.maxWidth - gap * 2) / 3).clamp(0.0, 240.0);
         final cardHeight = wheelWidth / 0.85;

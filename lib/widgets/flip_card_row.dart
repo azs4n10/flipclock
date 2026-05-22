@@ -27,8 +27,8 @@ class FlipCardRow extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final available = constraints.maxWidth;
-        // Gap between panels ~= 1/12 of the available width.
-        final gap = values.length > 1 ? available / 12 : 0.0;
+        // Gap between panels ~= 1/12 of the available width, then 0.7x.
+        final gap = values.length > 1 ? available / 12 * 0.7 : 0.0;
         final totalSpacing = gap * (values.length - 1);
         final cardWidth =
             ((available - totalSpacing) / values.length).clamp(0, maxCardWidth);
