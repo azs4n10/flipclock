@@ -248,9 +248,9 @@ class _TimerScreenState extends State<TimerScreen> {
                   borderRadius: BorderRadius.circular(wheelWidth * 0.15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.14),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+                      color: Colors.black.withValues(alpha: 0.16),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
