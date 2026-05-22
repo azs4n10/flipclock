@@ -30,6 +30,11 @@ def render(with_bg, out):
     d.text((SIZE / 2 - tw / 2 - bbox[0], cy - th / 2 - bbox[1]), text,
            font=font, fill=DIGIT)
 
+    # Thin, soft, dark seam across the middle — the flip-card fold (subtle,
+    # not a bright bar). Drawn over the number so the digits read as split.
+    seam = max(3, int(SIZE * 0.006))
+    d.rectangle([0, cy - seam / 2, SIZE, cy + seam / 2], fill=(110, 82, 74, 105))
+
     img.save(out)
     print("wrote", out)
 
