@@ -10,12 +10,18 @@ class DigitFont {
     required this.id,
     required this.name,
     required TextStyle Function(double fontSize, Color color) builder,
+    this.centerBias = 0.0,
     // ignore: prefer_initializing_formals
   }) : _builder = builder;
 
   final String id;
   final String name;
   final TextStyle Function(double fontSize, Color color) _builder;
+
+  /// Vertical nudge as a fraction of the card height to visually centre the
+  /// glyph on the flip seam. Fonts with extra ascent space (serifs) sit low,
+  /// so they need a small negative (upward) bias.
+  final double centerBias;
 
   /// Builds the style with tabular (fixed-width) figures so every digit —
   /// including the narrow "1" — occupies the same advance and renders at the
@@ -60,6 +66,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'serif',
     name: 'Serif',
+    centerBias: -0.045,
     builder: (s, c) => GoogleFonts.playfairDisplay(
       fontSize: s,
       color: c,
@@ -70,6 +77,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'serif_heavy',
     name: 'Serif Heavy',
+    centerBias: -0.045,
     builder: (s, c) => GoogleFonts.dmSerifDisplay(
       fontSize: s,
       color: c,
