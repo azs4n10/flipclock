@@ -200,7 +200,24 @@ class _SeasonalPainter extends CustomPainter {
   void _drawShape(Canvas canvas, Paint paint, _Shape shape, double s) {
     switch (shape) {
       case _Shape.snow:
-        canvas.drawCircle(Offset.zero, s / 2, paint);
+        // Six-armed snowflake.
+        final r = s / 2;
+        final arm = Paint()
+          ..color = paint.color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = (s * 0.08).clamp(1.0, 2.0)
+          ..strokeCap = StrokeCap.round;
+        for (var k = 0; k < 3; k++) {
+          canvas.save();
+          canvas.rotate(k * math.pi / 3);
+          canvas.drawLine(Offset(0, -r), Offset(0, r), arm);
+          // little branches
+          canvas.drawLine(
+              Offset(0, -r * 0.6), Offset(r * 0.3, -r * 0.85), arm);
+          canvas.drawLine(
+              Offset(0, -r * 0.6), Offset(-r * 0.3, -r * 0.85), arm);
+          canvas.restore();
+        }
         break;
       case _Shape.bubble:
         paint
@@ -223,12 +240,24 @@ class _SeasonalPainter extends CustomPainter {
         canvas.drawPath(path, paint);
         break;
       case _Shape.leaf:
-        final path = Path()
-          ..moveTo(0, -s / 2)
-          ..quadraticBezierTo(s / 2, 0, 0, s / 2)
-          ..quadraticBezierTo(-s / 2, 0, 0, -s / 2)
+        // Pointed leaf body with a midrib, side veins and a little stem.
+        final w = s * 0.40;
+        final h = s * 0.52;
+        final leaf = Path()
+          ..moveTo(0, -h)
+          ..quadraticBezierTo(w, -h * 0.15, 0, h)
+          ..quadraticBezierTo(-w, -h * 0.15, 0, -h)
           ..close();
-        canvas.drawPath(path, paint);
+        canvas.drawPath(leaf, paint);
+        final vein = Paint()
+          ..color = Color.lerp(paint.color, const Color(0xFF1B3A1B), 0.35)!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = (s * 0.045).clamp(0.7, 1.8)
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(0, -h * 0.78), Offset(0, h * 0.95), vein);
+        canvas.drawLine(Offset(0, -h * 0.1), Offset(w * 0.42, -h * 0.32), vein);
+        canvas.drawLine(Offset(0, h * 0.2), Offset(-w * 0.42, h * 0.0), vein);
+        canvas.drawLine(Offset(0, h), Offset(0, h * 1.28), vein); // stem
         break;
     }
   }
