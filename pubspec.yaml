@@ -57,14 +57,14 @@ flutter_launcher_icons:
   web:
     generate: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#FCE7F3"
+  adaptive_icon_background: "#F5EBE0"
   adaptive_icon_foreground: "assets/icon/app_icon_fg.png"
 
 flutter_native_splash:
-  color: "#FCE7F3"
+  color: "#F5EBE0"
   image: assets/icon/app_icon_fg.png
   android_12:
-    color: "#FCE7F3"
+    color: "#F5EBE0"
     image: assets/icon/app_icon_fg.png
 
 # For information on the generic Dart part of this file, see the

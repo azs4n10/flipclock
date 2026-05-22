@@ -1,29 +1,19 @@
-"""Generate the yumekawa app icon (full + adaptive foreground)."""
+"""Generate the app icon (full + adaptive foreground) in the default
+Beige Rose palette. Clean flip-card with "12" and a center divider — no
+overlapping heart, so it reads clearly at small sizes."""
 from PIL import Image, ImageDraw, ImageFont
 
 SIZE = 1024
-BG = (252, 231, 243, 255)        # #FCE7F3 light pink
-CARD = (255, 255, 255, 255)      # white
-DIGIT = (190, 90, 143, 255)      # #BE5A8F dusty pink
-DIVIDER = (245, 210, 225, 255)   # #F5D2E1
-HEART = (248, 165, 194, 255)     # #F8A5C2 coral pink
+BG = (245, 235, 224, 255)        # #F5EBE0 beige (Beige Rose background)
+CARD = (255, 255, 255, 255)      # white card (pops on beige)
+DIGIT = (139, 90, 107, 255)      # #8B5A6B dusty rose (Beige Rose numbers)
+DIVIDER = (224, 208, 192, 255)   # soft beige divider
 
 FONT_PATH = "C:/Windows/Fonts/arialbd.ttf"
 
 
 def rounded(draw, box, radius, fill):
     draw.rounded_rectangle(box, radius=radius, fill=fill)
-
-
-def draw_heart(draw, cx, cy, s, color):
-    # two lobes + lower triangle
-    r = s * 0.5
-    draw.ellipse([cx - s, cy - r, cx, cy + r], fill=color)
-    draw.ellipse([cx, cy - r, cx + s, cy + r], fill=color)
-    draw.polygon(
-        [(cx - s, cy + r * 0.2), (cx + s, cy + r * 0.2), (cx, cy + s * 1.25)],
-        fill=color,
-    )
 
 
 def render(card_margin, with_bg, out):
@@ -49,9 +39,6 @@ def render(card_margin, with_bg, out):
         font=font,
         fill=DIGIT,
     )
-
-    # little heart at top-right of the card
-    draw_heart(d, card[2] - SIZE * 0.16, card[1] + SIZE * 0.16, SIZE * 0.06, HEART)
 
     img.save(out)
     print("wrote", out)
