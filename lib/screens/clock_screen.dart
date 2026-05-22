@@ -97,7 +97,7 @@ class _ClockScreenState extends State<ClockScreen> {
                                   values: [values[i]],
                                   skin: skin,
                                   font: appState.font,
-                                  maxCardWidth: 150),
+                                  maxCardWidth: 150 * appState.fontScale),
                             ],
                           ],
                         )
@@ -105,13 +105,14 @@ class _ClockScreenState extends State<ClockScreen> {
                           key: const ValueKey('landscape'),
                           values: values,
                           skin: skin,
-                          font: appState.font),
+                          font: appState.font,
+                          maxCardWidth: 240 * appState.fontScale),
             ),
             const SizedBox(height: 28),
             Text(
               appState.signature,
               style: TextStyle(
-                fontSize: 14 * appState.fontScale,
+                fontSize: 18 * appState.fontScale,
                 color: skin.subTextColor,
                 letterSpacing: 2.5,
                 fontWeight: FontWeight.w500,

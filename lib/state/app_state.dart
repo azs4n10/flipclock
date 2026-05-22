@@ -23,7 +23,7 @@ class AppState extends ChangeNotifier {
         _use24Hour = _prefs.getBool(_kUse24Hour) ?? true,
         _showSeconds = _prefs.getBool(_kShowSeconds) ?? true,
         _showDate = _prefs.getBool(_kShowDate) ?? true,
-        _signature = _prefs.getString(_kSignature) ?? 'less is more',
+        _signature = _prefs.getString(_kSignature) ?? 'take your time',
         _bgmId = _prefs.getString(_kBgmId) ?? 'none',
         _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0,
         _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? true;
