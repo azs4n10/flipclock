@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/bgm.dart';
@@ -8,7 +8,11 @@ import '../theme/skins.dart';
 
 class AppState extends ChangeNotifier {
   AppState._(this._prefs)
-      : _skin = skinById(_prefs.getString(_kSkinId) ?? beigeRoseSkin.id),
+      : _skinId = _prefs.getString(_kSkinId) ?? beigeRoseSkin.id,
+        _customBg = _prefs.getInt(_kCustomBg) ?? 0xFFFCE7F3,
+        _customCard = _prefs.getInt(_kCustomCard) ?? 0xFFFFFFFF,
+        _customDigit = _prefs.getInt(_kCustomDigit) ?? 0xFFBE5A8F,
+        _customAccent = _prefs.getInt(_kCustomAccent) ?? 0xFFC4A8E1,
         _font = fontById(_prefs.getString(_kFontId) ?? allFonts.first.id),
         _focusMinutes = _prefs.getInt(_kFocusMinutes) ?? 25,
         _shortBreakMinutes = _prefs.getInt(_kShortBreakMinutes) ?? 5,
@@ -25,6 +29,10 @@ class AppState extends ChangeNotifier {
         _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? true;
 
   static const String _kSkinId = 'skin_id';
+  static const String _kCustomBg = 'custom_bg';
+  static const String _kCustomCard = 'custom_card';
+  static const String _kCustomDigit = 'custom_digit';
+  static const String _kCustomAccent = 'custom_accent';
   static const String _kFontId = 'font_id';
   static const String _kFocusMinutes = 'focus_minutes';
   static const String _kShortBreakMinutes = 'short_break_minutes';
@@ -47,7 +55,11 @@ class AppState extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  Skin _skin;
+  String _skinId;
+  int _customBg;
+  int _customCard;
+  int _customDigit;
+  int _customAccent;
   DigitFont _font;
   int _focusMinutes;
   int _shortBreakMinutes;
@@ -63,8 +75,34 @@ class AppState extends ChangeNotifier {
   double _fontScale;
   bool _seasonalEffect;
 
-  Skin get skin => _skin;
+  Skin get skin => _skinId == 'custom' ? _customSkin() : skinById(_skinId);
+  bool get isCustomSkin => _skinId == 'custom';
+  Color get customBg => Color(_customBg);
+  Color get customCard => Color(_customCard);
+  Color get customDigit => Color(_customDigit);
+  Color get customAccent => Color(_customAccent);
   DigitFont get font => _font;
+
+  Skin _customSkin() {
+    final bg = Color(_customBg);
+    final card = Color(_customCard);
+    final digit = Color(_customDigit);
+    final accent = Color(_customAccent);
+    return Skin(
+      id: 'custom',
+      name: 'Custom',
+      background: bg,
+      cardBackground: card,
+      digitColor: digit,
+      accentColor: accent,
+      buttonColor: accent,
+      buttonTextColor:
+          accent.computeLuminance() > 0.5 ? const Color(0xFF3A2A33) : Colors.white,
+      primaryTextColor: digit,
+      subTextColor: Color.lerp(digit, bg, 0.45)!,
+      dividerColor: Color.lerp(card, bg, 0.5)!,
+    );
+  }
   int get focusMinutes => _focusMinutes;
   int get shortBreakMinutes => _shortBreakMinutes;
   int get longBreakMinutes => _longBreakMinutes;
@@ -79,10 +117,29 @@ class AppState extends ChangeNotifier {
   double get fontScale => _fontScale;
   bool get seasonalEffect => _seasonalEffect;
 
-  Future<void> setSkin(Skin next) async {
-    if (_skin.id == next.id) return;
-    _skin = next;
-    await _prefs.setString(_kSkinId, next.id);
+  Future<void> setSkin(Skin next) async => setSkinId(next.id);
+
+  Future<void> setSkinId(String id) async {
+    if (_skinId == id) return;
+    _skinId = id;
+    await _prefs.setString(_kSkinId, id);
+    notifyListeners();
+  }
+
+  Future<void> setCustomColors({
+    Color? bg,
+    Color? card,
+    Color? digit,
+    Color? accent,
+  }) async {
+    if (bg != null) _customBg = bg.toARGB32();
+    if (card != null) _customCard = card.toARGB32();
+    if (digit != null) _customDigit = digit.toARGB32();
+    if (accent != null) _customAccent = accent.toARGB32();
+    await _prefs.setInt(_kCustomBg, _customBg);
+    await _prefs.setInt(_kCustomCard, _customCard);
+    await _prefs.setInt(_kCustomDigit, _customDigit);
+    await _prefs.setInt(_kCustomAccent, _customAccent);
     notifyListeners();
   }
 
