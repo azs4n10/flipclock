@@ -21,7 +21,8 @@ class AppState extends ChangeNotifier {
         _showDate = _prefs.getBool(_kShowDate) ?? true,
         _signature = _prefs.getString(_kSignature) ?? 'less is more',
         _bgmId = _prefs.getString(_kBgmId) ?? 'none',
-        _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0;
+        _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0,
+        _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? true;
 
   static const String _kSkinId = 'skin_id';
   static const String _kFontId = 'font_id';
@@ -37,6 +38,7 @@ class AppState extends ChangeNotifier {
   static const String _kSignature = 'signature';
   static const String _kBgmId = 'bgm_id';
   static const String _kFontScale = 'font_scale';
+  static const String _kSeasonalEffect = 'seasonal_effect';
 
   static Future<AppState> create() async {
     final prefs = await SharedPreferences.getInstance();
@@ -59,6 +61,7 @@ class AppState extends ChangeNotifier {
   String _signature;
   String _bgmId;
   double _fontScale;
+  bool _seasonalEffect;
 
   Skin get skin => _skin;
   DigitFont get font => _font;
@@ -74,6 +77,7 @@ class AppState extends ChangeNotifier {
   String get signature => _signature;
   String get bgmId => _bgmId;
   double get fontScale => _fontScale;
+  bool get seasonalEffect => _seasonalEffect;
 
   Future<void> setSkin(Skin next) async {
     if (_skin.id == next.id) return;
@@ -159,6 +163,12 @@ class AppState extends ChangeNotifier {
   Future<void> setFontScale(double v) async {
     _fontScale = v;
     await _prefs.setDouble(_kFontScale, v);
+    notifyListeners();
+  }
+
+  Future<void> setSeasonalEffect(bool v) async {
+    _seasonalEffect = v;
+    await _prefs.setBool(_kSeasonalEffect, v);
     notifyListeners();
   }
 }

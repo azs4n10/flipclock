@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import '../widgets/seasonal_overlay.dart';
 import '../widgets/segmented_tabs.dart';
 import 'clock_screen.dart';
 import 'pomodoro_screen.dart';
@@ -38,11 +39,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.watch<AppState>().skin;
+    final app = context.watch<AppState>();
+    final skin = app.skin;
 
     return Scaffold(
       backgroundColor: skin.background,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          SafeArea(
         bottom: false,
         child: Column(
           children: [
@@ -102,6 +106,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+          ),
+          if (app.seasonalEffect)
+            Positioned.fill(
+              child: SeasonalOverlay(
+                season: seasonForMonth(DateTime.now().month),
+              ),
+            ),
+        ],
       ),
     );
   }
