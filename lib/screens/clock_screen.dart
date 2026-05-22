@@ -65,36 +65,29 @@ class _ClockScreenState extends State<ClockScreen> {
         child: Column(
           children: [
             const SizedBox(height: 8),
-            if (appState.showDate) ...[
-              Text(
-                dateText,
-                style: TextStyle(
-                  fontSize: 32 * appState.fontScale,
-                  color: skin.primaryTextColor,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-            // Fill the leftover space; size the cards so the whole flip fits
-            // both the available width AND height (responsive to screen size,
-            // seconds on/off, and font scale).
+            // Date + flip are centred together as one group (date sits right
+            // above the flip), sized so the whole group fits the available
+            // width AND height.
             Expanded(
               child: LayoutBuilder(
                 builder: (context, c) {
                   final portrait = MediaQuery.of(context).orientation ==
                       Orientation.portrait;
+                  // Reserve room for the date block so the group stays on screen.
+                  final dateAllowance = appState.showDate
+                      ? 32 * appState.fontScale * 1.3 + 20
+                      : 0.0;
+                  final flipH = c.maxHeight - dateAllowance;
                   double maxCW;
                   if (portrait) {
                     final rows = values.length;
                     final hPer =
-                        (c.maxHeight - rowGap * (rows - 1)) / rows * 0.98;
-                    maxCW = math.min(
-                        150 * appState.fontScale, math.min(hPer * aspect, c.maxWidth));
+                        (flipH - rowGap * (rows - 1)) / rows * 0.98;
+                    maxCW = math.min(150 * appState.fontScale,
+                        math.min(hPer * aspect, c.maxWidth));
                   } else {
                     maxCW = math.min(
-                        240 * appState.fontScale, c.maxHeight * aspect * 0.94);
+                        240 * appState.fontScale, flipH * aspect * 0.94);
                   }
                   maxCW = math.max(24.0, maxCW);
 
@@ -121,19 +114,37 @@ class _ClockScreenState extends State<ClockScreen> {
                           maxCardWidth: maxCW);
 
                   return Center(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 450),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(
-                          scale: Tween<double>(begin: 0.92, end: 1.0)
-                              .animate(animation),
-                          child: child,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (appState.showDate) ...[
+                          Text(
+                            dateText,
+                            style: TextStyle(
+                              fontSize: 32 * appState.fontScale,
+                              color: skin.primaryTextColor,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 450),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(begin: 0.92, end: 1.0)
+                                  .animate(animation),
+                              child: child,
+                            ),
+                          ),
+                          child: flip,
                         ),
-                      ),
-                      child: flip,
+                      ],
                     ),
                   );
                 },
