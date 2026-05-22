@@ -66,7 +66,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'serif',
     name: 'Serif',
-    centerBias: -0.045,
+    centerBias: -0.13,
     builder: (s, c) => GoogleFonts.playfairDisplay(
       fontSize: s,
       color: c,
@@ -77,7 +77,7 @@ final List<DigitFont> allFonts = [
   DigitFont(
     id: 'serif_heavy',
     name: 'Serif Heavy',
-    centerBias: -0.045,
+    centerBias: -0.11,
     builder: (s, c) => GoogleFonts.dmSerifDisplay(
       fontSize: s,
       color: c,
