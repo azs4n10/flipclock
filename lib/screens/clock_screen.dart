@@ -66,7 +66,7 @@ class _ClockScreenState extends State<ClockScreen> {
               Text(
                 dateText,
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 32 * appState.fontScale,
                   color: skin.primaryTextColor,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -111,7 +111,7 @@ class _ClockScreenState extends State<ClockScreen> {
             Text(
               appState.signature,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 14 * appState.fontScale,
                 color: skin.subTextColor,
                 letterSpacing: 2.5,
                 fontWeight: FontWeight.w500,
