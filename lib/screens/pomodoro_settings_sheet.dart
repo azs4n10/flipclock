@@ -66,6 +66,12 @@ class PomodoroSettingsSheet extends StatelessWidget {
               onChanged: state.setShowDate,
               skin: skin,
             ),
+            _ToggleTile(
+              label: 'Seasonal effect',
+              value: state.seasonalEffect,
+              onChanged: state.setSeasonalEffect,
+              skin: skin,
+            ),
             _SignatureTile(
               value: state.signature,
               onChanged: state.setSignature,
