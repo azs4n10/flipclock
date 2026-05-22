@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/app_actions.dart';
+import '../services/bgm.dart';
 import '../state/app_state.dart';
 import '../theme/skin.dart';
 
@@ -70,6 +71,25 @@ class PomodoroSettingsSheet extends StatelessWidget {
               onChanged: state.setSignature,
               skin: skin,
             ),
+            _NumberTile(
+              label: 'Font size',
+              value: (state.fontScale * 100).round(),
+              min: 80,
+              max: 140,
+              step: 10,
+              onChanged: (v) => state.setFontScale(v / 100),
+              suffix: '%',
+              skin: skin,
+            ),
+            const SizedBox(height: 12),
+            _SectionLabel('Sound (BGM)', skin: skin),
+            for (final t in bgmTracks)
+              _RadioTile(
+                label: t.name,
+                selected: state.bgmId == t.id,
+                onTap: () => state.setBgm(t.id),
+                skin: skin,
+              ),
             const SizedBox(height: 12),
             _SectionLabel('Pomodoro', skin: skin),
             _ToggleTile(
@@ -245,6 +265,46 @@ class _SignatureTile extends StatelessWidget {
               ),
             ),
             Icon(Icons.chevron_right, color: skin.subTextColor, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RadioTile extends StatelessWidget {
+  const _RadioTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.skin,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Skin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? skin.digitColor : skin.subTextColor,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(fontSize: 15, color: skin.primaryTextColor),
+              ),
+            ),
           ],
         ),
       ),

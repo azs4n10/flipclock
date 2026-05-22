@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/bgm.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../theme/skins.dart';
@@ -18,7 +19,9 @@ class AppState extends ChangeNotifier {
         _use24Hour = _prefs.getBool(_kUse24Hour) ?? true,
         _showSeconds = _prefs.getBool(_kShowSeconds) ?? true,
         _showDate = _prefs.getBool(_kShowDate) ?? true,
-        _signature = _prefs.getString(_kSignature) ?? 'less is more';
+        _signature = _prefs.getString(_kSignature) ?? 'less is more',
+        _bgmId = _prefs.getString(_kBgmId) ?? 'none',
+        _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0;
 
   static const String _kSkinId = 'skin_id';
   static const String _kFontId = 'font_id';
@@ -32,6 +35,8 @@ class AppState extends ChangeNotifier {
   static const String _kShowSeconds = 'show_seconds';
   static const String _kShowDate = 'show_date';
   static const String _kSignature = 'signature';
+  static const String _kBgmId = 'bgm_id';
+  static const String _kFontScale = 'font_scale';
 
   static Future<AppState> create() async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,6 +57,8 @@ class AppState extends ChangeNotifier {
   bool _showSeconds;
   bool _showDate;
   String _signature;
+  String _bgmId;
+  double _fontScale;
 
   Skin get skin => _skin;
   DigitFont get font => _font;
@@ -65,6 +72,8 @@ class AppState extends ChangeNotifier {
   bool get showSeconds => _showSeconds;
   bool get showDate => _showDate;
   String get signature => _signature;
+  String get bgmId => _bgmId;
+  double get fontScale => _fontScale;
 
   Future<void> setSkin(Skin next) async {
     if (_skin.id == next.id) return;
@@ -137,6 +146,19 @@ class AppState extends ChangeNotifier {
   Future<void> setSignature(String v) async {
     _signature = v;
     await _prefs.setString(_kSignature, v);
+    notifyListeners();
+  }
+
+  Future<void> setBgm(String id) async {
+    _bgmId = id;
+    await _prefs.setString(_kBgmId, id);
+    await BgmController.instance.play(id);
+    notifyListeners();
+  }
+
+  Future<void> setFontScale(double v) async {
+    _fontScale = v;
+    await _prefs.setDouble(_kFontScale, v);
     notifyListeners();
   }
 }
