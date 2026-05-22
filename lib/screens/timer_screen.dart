@@ -140,14 +140,14 @@ class _TimerScreenState extends State<TimerScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             SegmentedTabs(
               items: const ['Count Up', 'Count Down', 'Target'],
               selectedIndex: _mode.index,
               onChanged: (i) => _switchMode(TimerMode.values[i]),
               skin: skin,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _modeConfig(skin),
             Expanded(
               child: LayoutBuilder(
@@ -171,7 +171,7 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
             if (showCenti) ...[
               _CentiReadout(value: cc, skin: skin, font: font),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
             ],
             Wrap(
               alignment: WrapAlignment.center,
@@ -192,7 +192,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 14),
           ],
         ),
       ),
