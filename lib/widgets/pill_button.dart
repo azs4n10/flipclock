@@ -36,20 +36,20 @@ class PillButton extends StatelessWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(28),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
-                Icon(icon, color: textColor, size: 18),
-                const SizedBox(width: 8),
+                Icon(icon, color: textColor, size: 16),
+                const SizedBox(width: 7),
               ],
               Text(
                 label,
                 style: TextStyle(
                   color: textColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                   letterSpacing: 0.5,
                 ),
               ),

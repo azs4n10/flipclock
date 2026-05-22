@@ -34,10 +34,10 @@ class SegmentedTabs extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: selected ? skin.buttonColor : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 items[i],
@@ -46,7 +46,7 @@ class SegmentedTabs extends StatelessWidget {
                       ? skin.buttonTextColor
                       : skin.primaryTextColor,
                   fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                  fontSize: 13,
                 ),
               ),
             ),
