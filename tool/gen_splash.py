@@ -57,7 +57,9 @@ def make_logo(out):
     img = Image.alpha_composite(img, shadow)
 
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle(card, radius=radius, fill=(255, 255, 255, 255))
+    # Warm cream card (not stark white) so it sits in the pastel palette
+    # instead of floating on top of it.
+    d.rounded_rectangle(card, radius=radius, fill=(247, 237, 227, 255))
 
     cy = (card[1] + card[3]) // 2
     font = ImageFont.truetype(FONT, 240)
