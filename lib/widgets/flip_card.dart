@@ -70,6 +70,82 @@ class FlipGroup extends StatelessWidget {
   }
 }
 
+/// A card that looks exactly like a [FlipGroup] but never animates — used for
+/// fast-changing values (centiseconds) that change too quickly to flip.
+class StaticFlipCard extends StatelessWidget {
+  const StaticFlipCard({
+    super.key,
+    required this.value,
+    required this.skin,
+    required this.font,
+    required this.width,
+    required this.height,
+    required this.centerBias,
+  });
+
+  final String value;
+  final Skin skin;
+  final DigitFont font;
+  final double width;
+  final double height;
+  final double centerBias;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = width * 0.15;
+    final chars = value.split('');
+    final digitWidth = width / chars.length;
+    final fontSize = height * 0.92;
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Stack(
+          children: [
+            Positioned.fill(child: ColoredBox(color: skin.cardBackground)),
+            Row(
+              children: [
+                for (final ch in chars)
+                  SizedBox(
+                    width: digitWidth,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: digitWidth * 0.08,
+                        vertical: height * 0.10,
+                      ),
+                      child: Center(
+                        child: Transform.translate(
+                          offset: Offset(0, centerBias * height),
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: Text(ch,
+                                style: font.build(fontSize, skin.digitColor)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Center(child: Container(height: 2, color: skin.dividerColor)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class FlipDigit extends StatefulWidget {
   const FlipDigit({
     super.key,

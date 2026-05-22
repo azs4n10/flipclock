@@ -164,15 +164,15 @@ class _TimerScreenState extends State<TimerScreen> {
                           skin: skin,
                           font: font,
                           maxCardWidth: limit,
+                          // Centiseconds as a 4th static card next to SEC
+                          // (stopwatch style), only when relevant.
+                          staticTail: showCenti ? cc : null,
+                          staticTailLabel: showCenti ? '' : null,
                         );
                   return Center(child: center);
                 },
               ),
             ),
-            if (showCenti) ...[
-              _CentiReadout(value: cc, skin: skin, font: font),
-              const SizedBox(height: 10),
-            ],
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 12,
@@ -381,51 +381,3 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 }
 
-/// Centiseconds (1/100 s) shown as a small static readout. It changes too fast
-/// to flip, so it is rendered as plain text in the selected digit font.
-class _CentiReadout extends StatelessWidget {
-  const _CentiReadout({
-    required this.value,
-    required this.skin,
-    required this.font,
-  });
-
-  final String value;
-  final Skin skin;
-  final DigitFont font;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: skin.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: skin.dividerColor),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '.',
-            style: font.build(34, skin.digitColor),
-          ),
-          const SizedBox(width: 2),
-          Text(
-            value,
-            style: font.build(34, skin.digitColor),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '1/100s',
-            style: TextStyle(
-              color: skin.subTextColor,
-              fontSize: 11,
-              letterSpacing: 1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
