@@ -58,27 +58,23 @@ class _ClockScreenState extends State<ClockScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Stack(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (appState.showDate)
-              Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 24),
-                  child: Text(
-                    dateText,
-                    style: TextStyle(
-                      fontSize: 32,
-                      color: skin.primaryTextColor,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+            const Spacer(),
+            if (appState.showDate) ...[
+              Text(
+                dateText,
+                style: TextStyle(
+                  fontSize: 32,
+                  color: skin.primaryTextColor,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
-            Align(
-              alignment: Alignment.center,
-              child: AnimatedSwitcher(
+              const SizedBox(height: 28),
+            ],
+            AnimatedSwitcher(
               duration: const Duration(milliseconds: 450),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
@@ -110,23 +106,18 @@ class _ClockScreenState extends State<ClockScreen> {
                           values: values,
                           skin: skin,
                           font: appState.font),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              appState.signature,
+              style: TextStyle(
+                fontSize: 14,
+                color: skin.subTextColor,
+                letterSpacing: 2.5,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 28),
-                child: Text(
-                  appState.signature,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: skin.subTextColor,
-                    letterSpacing: 2.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
+            const Spacer(),
           ],
         ),
       ),

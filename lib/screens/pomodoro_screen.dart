@@ -120,10 +120,10 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                 child: Text(
                   _phaseLabel(),
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 32,
                     letterSpacing: 3,
                     color: skin.primaryTextColor,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
