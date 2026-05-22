@@ -39,8 +39,8 @@ class FlipGroup extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
-            color: skin.accentColor.withValues(alpha: 0.18),
-            blurRadius: 18,
+            color: Colors.black.withValues(alpha: 0.14),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
