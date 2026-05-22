@@ -28,10 +28,36 @@ class BgmController {
   static final BgmController instance = BgmController._();
 
   final AudioPlayer _player = AudioPlayer();
+  bool _configured = false;
+
+  // Mix with other audio so the app's BGM layers over the user's own music
+  // (Spotify / Apple Music) instead of stopping it.
+  Future<void> _configure() async {
+    if (_configured) return;
+    _configured = true;
+    try {
+      await _player.setAudioContext(
+        AudioContext(
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: const {AVAudioSessionOptions.mixWithOthers},
+          ),
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: false,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.media,
+            audioFocus: AndroidAudioFocus.none,
+          ),
+        ),
+      );
+    } catch (_) {}
+  }
 
   Future<void> play(String id) async {
     final track = bgmById(id);
     try {
+      await _configure();
       await _player.stop();
       if (track.asset == null) return;
       await _player.setReleaseMode(ReleaseMode.loop);
