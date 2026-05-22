@@ -26,27 +26,40 @@ class PomodoroSettingsSheet extends StatelessWidget {
           child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(
-                width: 44,
-                height: 5,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: skin.dividerColor,
-                  borderRadius: BorderRadius.circular(4),
+            Container(
+              width: 44,
+              height: 5,
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: skin.dividerColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            Row(
+              children: [
+                const SizedBox(width: 40),
+                Expanded(
+                  child: Text(
+                    'Settings',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: skin.primaryTextColor,
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(
+                  width: 40,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: Icon(Icons.close, color: skin.primaryTextColor),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
             ),
-            Text(
-              'Settings',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: skin.primaryTextColor,
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _SectionLabel('Display', skin: skin),
             _ToggleTile(
               label: '24-hour clock',
