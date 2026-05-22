@@ -26,7 +26,7 @@ class AppState extends ChangeNotifier {
         _signature = _prefs.getString(_kSignature) ?? 'take your time',
         _bgmId = _prefs.getString(_kBgmId) ?? 'none',
         _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0,
-        _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? true;
+        _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? false;
 
   static const String _kSkinId = 'skin_id';
   static const String _kCustomBg = 'custom_bg';
