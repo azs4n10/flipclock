@@ -10,6 +10,7 @@ import '../services/alerts.dart';
 import '../state/app_state.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
+import '../widgets/flip_card.dart';
 import '../widgets/flip_card_row.dart';
 import '../widgets/pill_button.dart';
 import '../widgets/segmented_tabs.dart';
@@ -152,23 +153,60 @@ class _TimerScreenState extends State<TimerScreen> {
             Expanded(
               child: LayoutBuilder(
                 builder: (context, c) {
-                  // Reserve a little for the HOUR/MIN/SEC labels, then fit the
-                  // cards/wheels into the remaining height.
-                  final limit = math.max(
-                      24.0, math.min(240.0, (c.maxHeight - 36) * 0.85));
-                  final center = _mode == TimerMode.countDown && !_running
-                      ? _countdownWheels(skin, font, limit)
-                      : FlipCardRow(
-                          values: [hh, mm, ss],
-                          labels: const ['HOUR', 'MIN', 'SEC'],
-                          skin: skin,
-                          font: font,
-                          maxCardWidth: limit,
-                          // Centiseconds as a 4th static card next to SEC
-                          // (stopwatch style), only when relevant.
-                          staticTail: showCenti ? cc : null,
-                          staticTailLabel: showCenti ? '' : null,
-                        );
+                  final portrait = MediaQuery.of(context).orientation ==
+                      Orientation.portrait;
+                  final fs = appState.fontScale;
+                  const aspect = 0.85;
+                  final rowGap = 14.0;
+                  const tailScale = 0.55; // centiseconds card is smaller
+                  Widget center;
+                  if (_mode == TimerMode.countDown && !_running) {
+                    // Wheel setter stays horizontal (3 wheels).
+                    final limit = math.max(24.0,
+                        math.min(240.0 * fs, (c.maxHeight - 36) * aspect));
+                    center = _countdownWheels(skin, font, limit);
+                  } else if (portrait) {
+                    // Stack HOUR / MIN / SEC vertically; centiseconds sit small
+                    // beside SEC.
+                    const labelH = 30.0;
+                    final hPer =
+                        (c.maxHeight - rowGap * 2 - labelH * 3) / 3 * 0.98;
+                    final maxCW = math.max(24.0,
+                        math.min(150 * fs, math.min(hPer * aspect, c.maxWidth)));
+                    center = Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FlipCardRow(
+                            values: [hh],
+                            labels: const ['HOUR'],
+                            skin: skin,
+                            font: font,
+                            maxCardWidth: maxCW),
+                        SizedBox(height: rowGap),
+                        FlipCardRow(
+                            values: [mm],
+                            labels: const ['MIN'],
+                            skin: skin,
+                            font: font,
+                            maxCardWidth: maxCW),
+                        SizedBox(height: rowGap),
+                        _secRow(skin, font, ss, cc, showCenti, maxCW, aspect,
+                            tailScale),
+                      ],
+                    );
+                  } else {
+                    final maxCW = math.max(24.0,
+                        math.min(240 * fs, (c.maxHeight - 36) * aspect));
+                    center = FlipCardRow(
+                      values: [hh, mm, ss],
+                      labels: const ['HOUR', 'MIN', 'SEC'],
+                      skin: skin,
+                      font: font,
+                      maxCardWidth: maxCW,
+                      staticTail: showCenti ? cc : null,
+                      staticTailScale: tailScale,
+                    );
+                  }
                   return Center(child: center);
                 },
               ),
@@ -214,6 +252,60 @@ class _TimerScreenState extends State<TimerScreen> {
       case TimerMode.targetTime:
         return _targetTimeConfig(skin);
     }
+  }
+
+  // SEC card kept centred (aligned under HOUR/MIN) with the smaller
+  // centiseconds card balanced to its right.
+  Widget _secRow(Skin skin, DigitFont font, String ss, String cc,
+      bool showCenti, double maxCW, double aspect, double tailScale) {
+    final cardH = maxCW / aspect;
+    final centiW = maxCW * tailScale;
+    final centiH = cardH * tailScale;
+    const g = 10.0;
+    final bal = showCenti ? centiW + g : 0.0;
+    final labelStyle = TextStyle(
+      color: skin.subTextColor,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 2,
+      fontSize: 12,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (showCenti) SizedBox(width: bal),
+            FlipGroup(
+                value: ss, skin: skin, font: font, width: maxCW, height: cardH),
+            if (showCenti) const SizedBox(width: g),
+            if (showCenti)
+              StaticFlipCard(
+                value: cc,
+                skin: skin,
+                font: font,
+                width: centiW,
+                height: centiH,
+                centerBias: font.centerBias,
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (showCenti) SizedBox(width: bal),
+            SizedBox(
+              width: maxCW,
+              child:
+                  Text('SEC', textAlign: TextAlign.center, style: labelStyle),
+            ),
+            if (showCenti) const SizedBox(width: g),
+            if (showCenti) SizedBox(width: centiW),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _countdownWheels(Skin skin, DigitFont font, double maxWheelWidth) {

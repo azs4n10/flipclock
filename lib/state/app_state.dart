@@ -228,4 +228,27 @@ class AppState extends ChangeNotifier {
     await _prefs.setBool(_kSeasonalEffect, v);
     notifyListeners();
   }
+
+  // --- Pomodoro runtime state, persisted so it survives the app being
+  // suspended or killed (common for iOS web apps when switching apps). When
+  // running we store the absolute end time, so elapsed background time counts.
+  int get pomoPhase => _prefs.getInt('pomo_phase') ?? 0;
+  int get pomoCompleted => _prefs.getInt('pomo_completed') ?? 0;
+  bool get pomoRunning => _prefs.getBool('pomo_running') ?? false;
+  int get pomoEndMillis => _prefs.getInt('pomo_end_millis') ?? 0;
+  int get pomoRemainingSec => _prefs.getInt('pomo_remaining_sec') ?? 0;
+
+  Future<void> savePomodoro({
+    required int phase,
+    required int completed,
+    required bool running,
+    required int endMillis,
+    required int remainingSec,
+  }) async {
+    await _prefs.setInt('pomo_phase', phase);
+    await _prefs.setInt('pomo_completed', completed);
+    await _prefs.setBool('pomo_running', running);
+    await _prefs.setInt('pomo_end_millis', endMillis);
+    await _prefs.setInt('pomo_remaining_sec', remainingSec);
+  }
 }

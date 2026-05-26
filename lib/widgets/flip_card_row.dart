@@ -15,6 +15,7 @@ class FlipCardRow extends StatelessWidget {
     this.maxCardWidth = 240,
     this.staticTail,
     this.staticTailLabel,
+    this.staticTailScale = 1.0,
   });
 
   final List<String> values;
@@ -25,80 +26,88 @@ class FlipCardRow extends StatelessWidget {
   final double maxCardWidth;
 
   /// An extra trailing value rendered as a non-flipping card (e.g. the
-  /// fast-changing centiseconds on the stopwatch), placed next to the others.
+  /// fast-changing centiseconds on the stopwatch). [staticTailScale] shrinks it
+  /// relative to the main cards.
   final String? staticTail;
   final String? staticTailLabel;
+  final double staticTailScale;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final available = constraints.maxWidth;
-        final count = values.length + (staticTail != null ? 1 : 0);
-        // Gap between panels ~= 1/12 of the available width, then 0.7x.
-        final gap = count > 1 ? available / 12 * 0.7 : 0.0;
-        final totalSpacing = gap * (count - 1);
+        final hasTail = staticTail != null;
+        final cardCount = values.length + (hasTail ? 1 : 0);
+        final gap = cardCount > 1 ? available / 12 * 0.7 : 0.0;
+        final totalSpacing = gap * (cardCount - 1);
+        // The tail counts as a fraction of a card width when sizing.
+        final units = values.length + (hasTail ? staticTailScale : 0.0);
         final cardWidth =
-            ((available - totalSpacing) / count).clamp(0, maxCardWidth);
+            ((available - totalSpacing) / units).clamp(0.0, maxCardWidth);
         final cardHeight = cardWidth / aspectRatio;
+        final tailWidth = cardWidth * staticTailScale;
+        final tailHeight = cardHeight * staticTailScale;
         final hasLabels = labels != null || staticTailLabel != null;
 
-        final cards = <Widget>[
-          for (int i = 0; i < values.length; i++)
-            FlipGroup(
-              value: values[i],
-              skin: skin,
-              font: font,
-              width: cardWidth.toDouble(),
-              height: cardHeight,
-            ),
-          if (staticTail != null)
-            StaticFlipCard(
-              value: staticTail!,
-              skin: skin,
-              font: font,
-              width: cardWidth.toDouble(),
-              height: cardHeight,
-              centerBias: font.centerBias,
-            ),
-        ];
+        Widget labelCell(String text, double width) => SizedBox(
+              width: width,
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: skin.subTextColor,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2,
+                  fontSize: 12,
+                ),
+              ),
+            );
+
+        final cardRow = <Widget>[];
+        final labelRow = <Widget>[];
+        for (int i = 0; i < values.length; i++) {
+          cardRow.add(FlipGroup(
+            value: values[i],
+            skin: skin,
+            font: font,
+            width: cardWidth,
+            height: cardHeight,
+          ));
+          labelRow.add(labelCell(
+              i < (labels?.length ?? 0) ? labels![i] : '', cardWidth));
+        }
+        if (hasTail) {
+          cardRow.add(StaticFlipCard(
+            value: staticTail!,
+            skin: skin,
+            font: font,
+            width: tailWidth,
+            height: tailHeight,
+            centerBias: font.centerBias,
+          ));
+          labelRow.add(labelCell(staticTailLabel ?? '', tailWidth));
+        }
+
+        List<Widget> withGaps(List<Widget> items) => [
+              for (int i = 0; i < items.length; i++) ...[
+                items[i],
+                if (i != items.length - 1) SizedBox(width: gap),
+              ],
+            ];
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (int i = 0; i < cards.length; i++) ...[
-                  cards[i],
-                  if (i != cards.length - 1) SizedBox(width: gap),
-                ],
-              ],
+              children: withGaps(cardRow),
             ),
             if (hasLabels) ...[
               const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (int i = 0; i < cards.length; i++) ...[
-                    SizedBox(
-                      width: cardWidth.toDouble(),
-                      child: Text(
-                        i < (labels?.length ?? 0)
-                            ? labels![i]
-                            : (i == values.length ? (staticTailLabel ?? '') : ''),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: skin.subTextColor,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    if (i != cards.length - 1) SizedBox(width: gap),
-                  ],
-                ],
+                children: withGaps(labelRow),
               ),
             ],
           ],
