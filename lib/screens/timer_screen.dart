@@ -10,6 +10,7 @@ import '../services/alerts.dart';
 import '../state/app_state.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
+import '../widgets/completion_flash.dart';
 import '../widgets/flip_card.dart';
 import '../widgets/flip_card_row.dart';
 import '../widgets/pill_button.dart';
@@ -34,6 +35,7 @@ class _TimerScreenState extends State<TimerScreen> {
   Duration _accumulated = Duration.zero;
   DateTime? _startedAt;
 
+  int _flashTick = 0;
   Duration _countDownInitial = const Duration(minutes: 10);
   // Count Down length set via the iOS-style scroll wheels.
   int _cdH = 0;
@@ -89,6 +91,7 @@ class _TimerScreenState extends State<TimerScreen> {
     _running = false;
     _startedAt = null;
     _accumulated = _countDownInitial;
+    _flashTick++;
     Alerts.notify(context.read<AppState>());
   }
 
@@ -130,13 +133,17 @@ class _TimerScreenState extends State<TimerScreen> {
     final skin = appState.skin;
     final font = appState.font;
     final d = _shownDuration();
-    final hh = (d.inHours % 100).toString().padLeft(2, '0');
+    // Cap at 99h instead of wrapping (a 100s-place card would be overkill);
+    // far-future targets simply read 99:59:59 until within range.
+    final hh = d.inHours.clamp(0, 99).toString().padLeft(2, '0');
     final mm = (d.inMinutes % 60).toString().padLeft(2, '0');
     final ss = (d.inSeconds % 60).toString().padLeft(2, '0');
     final cc = ((d.inMilliseconds % 1000) ~/ 10).toString().padLeft(2, '0');
     final showCenti = _mode != TimerMode.targetTime;
 
-    return SafeArea(
+    return Stack(
+      children: [
+        SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -234,6 +241,15 @@ class _TimerScreenState extends State<TimerScreen> {
           ],
         ),
       ),
+        ),
+        Positioned.fill(
+          child: CompletionFlash(
+            trigger: _flashTick,
+            skin: skin,
+            message: "Time's up",
+          ),
+        ),
+      ],
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../services/alerts.dart';
 import '../state/app_state.dart';
+import '../widgets/completion_flash.dart';
 import '../widgets/flip_card_row.dart';
 import '../widgets/pill_button.dart';
 
@@ -29,6 +30,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   // Absolute end time while running; elapsed is derived from the wall clock so
   // time keeps counting while the app is backgrounded.
   DateTime? _endAt;
+  int _flashTick = 0;
+  String _flashMsg = '';
 
   @override
   void initState() {
@@ -143,6 +146,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     _ticker?.cancel();
     final state = context.read<AppState>();
     Alerts.notify(state);
+    _flashMsg = _phase == PomodoroPhase.focus ? 'Focus complete' : 'Break over';
+    _flashTick++;
     _running = false;
     _endAt = null;
     if (_phase == PomodoroPhase.focus) {
@@ -179,7 +184,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     final mm = (totalSeconds ~/ 60).toString().padLeft(2, '0');
     final ss = (totalSeconds % 60).toString().padLeft(2, '0');
 
-    return SafeArea(
+    return Stack(
+      children: [
+        SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -277,6 +284,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           ],
         ),
       ),
+        ),
+        Positioned.fill(
+          child: CompletionFlash(
+            trigger: _flashTick,
+            skin: skin,
+            message: _flashMsg,
+          ),
+        ),
+      ],
     );
   }
 }
