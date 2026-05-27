@@ -69,6 +69,9 @@ class _TimerScreenState extends State<TimerScreen> {
       _countDownInitial =
           Duration(hours: _cdH, minutes: _cdM, seconds: _cdS);
       if (_countDownInitial == Duration.zero) return; // nothing to count down
+      // Always start a countdown fresh from the wheel value (pausing reveals
+      // the wheels, so there is no mid-countdown resume to preserve).
+      _accumulated = Duration.zero;
     }
     _startedAt = DateTime.now();
     _ticker?.cancel();
@@ -158,6 +161,7 @@ class _TimerScreenState extends State<TimerScreen> {
             const SizedBox(height: 10),
             _modeConfig(skin),
             Expanded(
+              flex: 6,
               child: LayoutBuilder(
                 builder: (context, c) {
                   final portrait = MediaQuery.of(context).orientation ==
@@ -237,7 +241,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const Expanded(flex: 1, child: SizedBox.shrink()),
           ],
         ),
       ),

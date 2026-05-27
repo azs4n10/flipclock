@@ -1,13 +1,12 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../theme/skin.dart';
 
-/// A silent, workplace-friendly "done" signal: a soft full-screen pulse in the
-/// accent colour with a check mark and a short message that fades away. Driven
-/// by a real-time Stopwatch so it plays correctly even with OS reduce-motion.
+/// A silent, workplace-friendly "done" signal: a soft full-screen wash in the
+/// accent colour with a check mark and a short message. It animates in, then
+/// stays until the user taps to dismiss. Driven by a real-time Stopwatch so the
+/// entrance plays correctly even with OS reduce-motion.
 class CompletionFlash extends StatefulWidget {
   const CompletionFlash({
     super.key,
@@ -16,7 +15,7 @@ class CompletionFlash extends StatefulWidget {
     required this.message,
   });
 
-  /// Increment this to play the effect once.
+  /// Increment this to show the effect.
   final int trigger;
   final Skin skin;
   final String message;
@@ -27,10 +26,10 @@ class CompletionFlash extends StatefulWidget {
 
 class _CompletionFlashState extends State<CompletionFlash>
     with SingleTickerProviderStateMixin {
-  static const int _durMs = 1900;
+  static const int _enterMs = 500;
   late final Ticker _ticker;
   final Stopwatch _watch = Stopwatch();
-  double _t = 0;
+  double _enter = 0; // 0..1 entrance progress
   bool _active = false;
 
   @override
@@ -42,31 +41,39 @@ class _CompletionFlashState extends State<CompletionFlash>
   @override
   void didUpdateWidget(covariant CompletionFlash old) {
     super.didUpdateWidget(old);
-    if (widget.trigger != old.trigger && widget.trigger != 0) _play();
+    if (widget.trigger != old.trigger && widget.trigger != 0) _show();
   }
 
-  void _play() {
+  void _show() {
     _watch
       ..reset()
       ..start();
     _active = true;
+    _enter = 0;
     if (!_ticker.isActive) _ticker.start();
     setState(() {});
   }
 
   void _onTick(Duration _) {
-    final t = (_watch.elapsedMilliseconds / _durMs).clamp(0.0, 1.0);
-    setState(() => _t = t);
-    if (t >= 1.0) {
+    final e = (_watch.elapsedMilliseconds / _enterMs).clamp(0.0, 1.0);
+    setState(() => _enter = e);
+    if (e >= 1.0) {
+      // Hold (no auto-dismiss) until the user taps; stop ticking to save work.
       _ticker.stop();
-      _watch
-        ..stop()
-        ..reset();
-      setState(() {
-        _active = false;
-        _t = 0;
-      });
+      _watch.stop();
     }
+  }
+
+  void _dismiss() {
+    if (!_active) return;
+    _ticker.stop();
+    _watch
+      ..stop()
+      ..reset();
+    setState(() {
+      _active = false;
+      _enter = 0;
+    });
   }
 
   @override
@@ -78,19 +85,16 @@ class _CompletionFlashState extends State<CompletionFlash>
   @override
   Widget build(BuildContext context) {
     if (!_active) return const SizedBox.shrink();
-    final t = _t;
-    final fade = t < 0.12
-        ? t / 0.12
-        : (t > 0.72 ? (1 - (t - 0.72) / 0.28) : 1.0);
-    final pulse = math.sin(t * math.pi * 3).abs(); // a few gentle pulses
-    final scale =
-        0.8 + 0.22 * Curves.easeOutBack.transform((t / 0.45).clamp(0.0, 1.0));
+    final e = Curves.easeOut.transform(_enter);
+    final scale = 0.8 + 0.2 * Curves.easeOutBack.transform(_enter);
     final skin = widget.skin;
-    return IgnorePointer(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _dismiss,
       child: Opacity(
-        opacity: fade.clamp(0.0, 1.0),
+        opacity: e,
         child: Container(
-          color: skin.accentColor.withValues(alpha: 0.10 + 0.16 * pulse),
+          color: skin.accentColor.withValues(alpha: 0.22),
           child: Center(
             child: Transform.scale(
               scale: scale,
@@ -104,9 +108,18 @@ class _CompletionFlashState extends State<CompletionFlash>
                     widget.message,
                     style: TextStyle(
                       color: skin.primaryTextColor,
-                      fontSize: 24,
+                      fontSize: 26,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'tap to dismiss',
+                    style: TextStyle(
+                      color: skin.subTextColor,
+                      fontSize: 13,
+                      letterSpacing: 1.5,
                     ),
                   ),
                 ],
