@@ -202,6 +202,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               ),
             ),
             Expanded(
+              flex: 6,
               child: LayoutBuilder(
                 builder: (context, c) {
                   final portrait = MediaQuery.of(context).orientation ==
@@ -280,7 +281,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const Expanded(flex: 1, child: SizedBox.shrink()),
           ],
         ),
       ),
