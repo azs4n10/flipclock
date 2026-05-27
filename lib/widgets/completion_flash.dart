@@ -93,9 +93,18 @@ class _CompletionFlashState extends State<CompletionFlash>
       onTap: _dismiss,
       child: Opacity(
         opacity: e,
-        child: Container(
-          color: skin.accentColor.withValues(alpha: 0.22),
-          child: Center(
+        child: DecoratedBox(
+          // Strong scrim in the theme background colour so the cards behind
+          // fade out and the check mark / message read clearly. A faint accent
+          // tint keeps it on-brand.
+          decoration: BoxDecoration(
+            color: skin.background.withValues(alpha: 0.93),
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: skin.accentColor.withValues(alpha: 0.10),
+            ),
+            child: Center(
             child: Transform.scale(
               scale: scale,
               child: Column(
@@ -125,6 +134,7 @@ class _CompletionFlashState extends State<CompletionFlash>
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),
