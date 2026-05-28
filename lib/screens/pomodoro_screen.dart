@@ -181,7 +181,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     final skin = state.skin;
 
     final totalSeconds = _remaining.inSeconds;
-    final mm = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final mm = (totalSeconds ~/ 60).clamp(0, 99).toString().padLeft(2, '0');
     final ss = (totalSeconds % 60).toString().padLeft(2, '0');
 
     return Stack(
