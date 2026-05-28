@@ -70,14 +70,14 @@ class _ClockScreenState extends State<ClockScreen> {
             // above the flip), sized so the whole group fits the available
             // width AND height.
             Expanded(
+              flex: 6,
               child: LayoutBuilder(
                 builder: (context, c) {
                   final portrait = MediaQuery.of(context).orientation ==
                       Orientation.portrait;
                   // Reserve room for the date block so the group stays on screen.
-                  final dateAllowance = appState.showDate
-                      ? 32 * appState.fontScale * 1.3 + 20
-                      : 0.0;
+                  // Date is a fixed size (font scale only affects the digits).
+                  final dateAllowance = appState.showDate ? 32 * 1.3 + 20 : 0.0;
                   final flipH = c.maxHeight - dateAllowance;
                   double maxCW;
                   if (portrait) {
@@ -122,7 +122,7 @@ class _ClockScreenState extends State<ClockScreen> {
                           Text(
                             dateText,
                             style: GoogleFonts.playfairDisplay(
-                              fontSize: 32 * appState.fontScale,
+                              fontSize: 32,
                               color: skin.primaryTextColor,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
@@ -155,14 +155,14 @@ class _ClockScreenState extends State<ClockScreen> {
             Text(
               appState.signature,
               style: GoogleFonts.playfairDisplay(
-                fontSize: 18 * appState.fontScale,
+                fontSize: 18,
                 color: skin.subTextColor,
                 letterSpacing: 1.5,
                 fontWeight: FontWeight.w500,
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 8),
+            const Expanded(flex: 1, child: SizedBox.shrink()),
           ],
         ),
       ),

@@ -131,7 +131,7 @@ class PomodoroSettingsSheet extends StatelessWidget {
               label: 'Focus length (min)',
               value: state.focusMinutes,
               min: 5,
-              max: 95, // keep within the 2-digit MM display (no HH needed)
+              max: 99, // keep within the 2-digit MM display (no HH needed)
               step: 5,
               onChanged: state.setFocusMinutes,
               skin: skin,
@@ -464,7 +464,8 @@ class _NumberTile extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.remove_circle_outline, color: skin.accentColor),
-            onPressed: value > min ? () => onChanged(value - step) : null,
+            onPressed:
+                value > min ? () => onChanged((value - step).clamp(min, max)) : null,
           ),
           SizedBox(
             width: 54,
@@ -480,7 +481,8 @@ class _NumberTile extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.add_circle_outline, color: skin.accentColor),
-            onPressed: value < max ? () => onChanged(value + step) : null,
+            onPressed:
+                value < max ? () => onChanged((value + step).clamp(min, max)) : null,
           ),
         ],
       ),
