@@ -131,7 +131,7 @@ class PomodoroSettingsSheet extends StatelessWidget {
               label: 'Focus length (min)',
               value: state.focusMinutes,
               min: 5,
-              max: 120,
+              max: 95, // keep within the 2-digit MM display (no HH needed)
               step: 5,
               onChanged: state.setFocusMinutes,
               skin: skin,
