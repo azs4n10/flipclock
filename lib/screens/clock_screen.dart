@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -121,7 +120,7 @@ class _ClockScreenState extends State<ClockScreen> {
                         if (appState.showDate) ...[
                           Text(
                             dateText,
-                            style: GoogleFonts.playfairDisplay(
+                            style: appState.textFont.style(
                               fontSize: 32,
                               color: skin.primaryTextColor,
                               fontWeight: FontWeight.w600,
@@ -154,7 +153,7 @@ class _ClockScreenState extends State<ClockScreen> {
             const SizedBox(height: 16),
             Text(
               appState.signature,
-              style: GoogleFonts.playfairDisplay(
+              style: appState.textFont.style(
                 fontSize: 18,
                 color: skin.subTextColor,
                 letterSpacing: 1.5,

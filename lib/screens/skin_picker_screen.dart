@@ -122,7 +122,68 @@ class SkinPickerScreen extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(height: 24),
+          _SectionTitle('Text font', skin: skin),
+          const SizedBox(height: 4),
+          Text(
+            'For the date, labels and signature',
+            style: TextStyle(color: skin.subTextColor, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final tf in textFonts)
+                _TextFontChip(
+                  tf: tf,
+                  skin: skin,
+                  selected: tf.id == state.textFontId,
+                  onTap: () => state.setTextFont(tf.id),
+                ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _TextFontChip extends StatelessWidget {
+  const _TextFontChip({
+    required this.tf,
+    required this.skin,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final TextFont tf;
+  final Skin skin;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? skin.buttonColor : skin.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? skin.buttonColor : skin.dividerColor,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          tf.name,
+          style: tf.style(
+            fontSize: 18,
+            color: selected ? skin.buttonTextColor : skin.primaryTextColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
