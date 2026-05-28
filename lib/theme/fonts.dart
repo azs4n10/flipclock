@@ -116,3 +116,40 @@ final List<DigitFont> allFonts = [
 
 DigitFont fontById(String id) =>
     allFonts.firstWhere((f) => f.id == id, orElse: () => allFonts.first);
+
+/// Font for the display text (date / signature / phase label). Separate from
+/// the digit font so the readable headings aren't forced into Stencil etc.
+class TextFont {
+  const TextFont(this.id, this.name, this._apply);
+  final String id;
+  final String name;
+  final TextStyle Function(TextStyle base) _apply;
+
+  TextStyle style({
+    required double fontSize,
+    Color? color,
+    FontWeight? fontWeight,
+    FontStyle? fontStyle,
+    double? letterSpacing,
+  }) =>
+      _apply(TextStyle(
+        fontSize: fontSize,
+        color: color,
+        fontWeight: fontWeight,
+        fontStyle: fontStyle,
+        letterSpacing: letterSpacing,
+      ));
+}
+
+final List<TextFont> textFonts = [
+  TextFont('playfair', 'Playfair',
+      (b) => GoogleFonts.playfairDisplay(textStyle: b)),
+  TextFont('cormorant', 'Cormorant',
+      (b) => GoogleFonts.cormorantGaramond(textStyle: b)),
+  TextFont('quicksand', 'Quicksand', (b) => GoogleFonts.quicksand(textStyle: b)),
+  TextFont('nunito', 'Nunito', (b) => GoogleFonts.nunito(textStyle: b)),
+  TextFont('rounded', 'Rounded', (b) => GoogleFonts.mPlusRounded1c(textStyle: b)),
+];
+
+TextFont textFontById(String id) =>
+    textFonts.firstWhere((f) => f.id == id, orElse: () => textFonts.first);

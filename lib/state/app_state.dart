@@ -14,6 +14,7 @@ class AppState extends ChangeNotifier {
         _customDigit = _prefs.getInt(_kCustomDigit) ?? 0xFFBE5A8F,
         _customAccent = _prefs.getInt(_kCustomAccent) ?? 0xFFC4A8E1,
         _font = fontById(_prefs.getString(_kFontId) ?? allFonts.first.id),
+        _textFontId = _prefs.getString(_kTextFontId) ?? 'playfair',
         _focusMinutes = _prefs.getInt(_kFocusMinutes) ?? 25,
         _shortBreakMinutes = _prefs.getInt(_kShortBreakMinutes) ?? 5,
         _longBreakMinutes = _prefs.getInt(_kLongBreakMinutes) ?? 15,
@@ -34,6 +35,7 @@ class AppState extends ChangeNotifier {
   static const String _kCustomDigit = 'custom_digit';
   static const String _kCustomAccent = 'custom_accent';
   static const String _kFontId = 'font_id';
+  static const String _kTextFontId = 'text_font_id';
   static const String _kFocusMinutes = 'focus_minutes';
   static const String _kShortBreakMinutes = 'short_break_minutes';
   static const String _kLongBreakMinutes = 'long_break_minutes';
@@ -61,6 +63,7 @@ class AppState extends ChangeNotifier {
   int _customDigit;
   int _customAccent;
   DigitFont _font;
+  String _textFontId;
   int _focusMinutes;
   int _shortBreakMinutes;
   int _longBreakMinutes;
@@ -82,6 +85,8 @@ class AppState extends ChangeNotifier {
   Color get customDigit => Color(_customDigit);
   Color get customAccent => Color(_customAccent);
   DigitFont get font => _font;
+  TextFont get textFont => textFontById(_textFontId);
+  String get textFontId => _textFontId;
 
   Skin _customSkin() {
     final bg = Color(_customBg);
@@ -147,6 +152,13 @@ class AppState extends ChangeNotifier {
     if (_font.id == next.id) return;
     _font = next;
     await _prefs.setString(_kFontId, next.id);
+    notifyListeners();
+  }
+
+  Future<void> setTextFont(String id) async {
+    if (_textFontId == id) return;
+    _textFontId = id;
+    await _prefs.setString(_kTextFontId, id);
     notifyListeners();
   }
 

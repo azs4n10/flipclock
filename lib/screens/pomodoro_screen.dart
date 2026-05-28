@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../services/alerts.dart';
@@ -194,7 +193,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             const SizedBox(height: 16),
             Text(
               _phaseLabel(),
-              style: GoogleFonts.playfairDisplay(
+              style: state.textFont.style(
                 fontSize: 32,
                 letterSpacing: 3,
                 color: skin.primaryTextColor,
