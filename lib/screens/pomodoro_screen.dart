@@ -26,6 +26,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   int _completedFocus = 0;
   Duration _remaining = const Duration(minutes: 25);
   bool _running = false;
+  late int _lastFocusMinutes;
+  late int _lastShortBreakMinutes;
+  late int _lastLongBreakMinutes;
   // Absolute end time while running; elapsed is derived from the wall clock so
   // time keeps counting while the app is backgrounded.
   DateTime? _endAt;
@@ -37,7 +40,40 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     final state = context.read<AppState>();
+    _lastFocusMinutes = state.focusMinutes;
+    _lastShortBreakMinutes = state.shortBreakMinutes;
+    _lastLongBreakMinutes = state.longBreakMinutes;
     _restore(state);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = Provider.of<AppState>(context);
+    final activeDurationChanged = switch (_phase) {
+      PomodoroPhase.focus => _lastFocusMinutes != state.focusMinutes,
+      PomodoroPhase.shortBreak =>
+        _lastShortBreakMinutes != state.shortBreakMinutes,
+      PomodoroPhase.longBreak =>
+        _lastLongBreakMinutes != state.longBreakMinutes,
+    };
+
+    _lastFocusMinutes = state.focusMinutes;
+    _lastShortBreakMinutes = state.shortBreakMinutes;
+    _lastLongBreakMinutes = state.longBreakMinutes;
+
+    if (!_running && activeDurationChanged) {
+      _remaining = _durationForPhase(state, _phase);
+      _persist();
+    }
+  }
+
+  Duration _durationForPhase(AppState state, PomodoroPhase phase) {
+    return switch (phase) {
+      PomodoroPhase.focus => Duration(minutes: state.focusMinutes),
+      PomodoroPhase.shortBreak => Duration(minutes: state.shortBreakMinutes),
+      PomodoroPhase.longBreak => Duration(minutes: state.longBreakMinutes),
+    };
   }
 
   void _restore(AppState state) {
