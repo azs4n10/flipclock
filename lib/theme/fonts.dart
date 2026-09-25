@@ -148,8 +148,12 @@ final List<TextFont> textFonts = [
       (b) => GoogleFonts.cormorantGaramond(textStyle: b)),
   TextFont('quicksand', 'Quicksand', (b) => GoogleFonts.quicksand(textStyle: b)),
   TextFont('nunito', 'Nunito', (b) => GoogleFonts.nunito(textStyle: b)),
-  TextFont('rounded', 'Rounded', (b) => GoogleFonts.mPlusRounded1c(textStyle: b)),
 ];
 
 TextFont textFontById(String id) =>
     textFonts.firstWhere((f) => f.id == id, orElse: () => textFonts.first);
+
+/// Falls back to the default for an id that no longer exists, so a setting
+/// saved by an older version does not leave the picker with nothing selected.
+String normalizeTextFontId(String? id) =>
+    textFonts.any((f) => f.id == id) ? id! : textFonts.first.id;

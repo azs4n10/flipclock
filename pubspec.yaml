@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
   provider: ^6.1.2
   shared_preferences: ^2.3.2
   intl: ^0.19.0
@@ -41,6 +40,7 @@ dependencies:
   url_launcher: ^6.3.1
   in_app_review: ^2.0.10
   flutter_colorpicker: ^1.1.0
+  wakelock_plus: ^1.5.2
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +83,9 @@ flutter:
   assets:
     - assets/sounds/chime.wav
     - assets/bgm/
+    # Bundled Google Fonts: google_fonts picks matching files up from the
+    # assets instead of fetching them, so the app looks right offline.
+    - assets/google_fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
