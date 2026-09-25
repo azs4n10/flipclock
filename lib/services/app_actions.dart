@@ -18,7 +18,7 @@ class AppActions {
   /// Empty until the app has an address of its own. While it is empty the
   /// feedback entry stays hidden rather than opening a blank mail draft.
   /// Set it with tool/set_contact_email.py, which also updates the policy.
-  static const String contactEmail = '';
+  static const String contactEmail = 'kamiyo.desk24@gmail.com';
 
   static Future<void> share() async {
     try {
