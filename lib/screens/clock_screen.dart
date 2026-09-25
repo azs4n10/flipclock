@@ -15,7 +15,11 @@ class ClockScreen extends StatefulWidget {
   State<ClockScreen> createState() => _ClockScreenState();
 }
 
-class _ClockScreenState extends State<ClockScreen> {
+class _ClockScreenState extends State<ClockScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   DateTime _now = DateTime.now();
   Timer? _timer;
 
@@ -45,6 +49,7 @@ class _ClockScreenState extends State<ClockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final appState = context.watch<AppState>();
     final skin = appState.skin;
     final hour = appState.use24Hour
@@ -77,7 +82,9 @@ class _ClockScreenState extends State<ClockScreen> {
                   // Reserve room for the date block so the group stays on screen.
                   // Date is a fixed size (font scale only affects the digits).
                   final dateAllowance = appState.showDate ? 32 * 1.3 + 20 : 0.0;
-                  final flipH = c.maxHeight - dateAllowance;
+                  final meridiemAllowance =
+                      appState.use24Hour ? 0.0 : 14 * 1.3 + 6;
+                  final flipH = c.maxHeight - dateAllowance - meridiemAllowance;
                   double maxCW;
                   if (portrait) {
                     final rows = values.length;
@@ -118,16 +125,36 @@ class _ClockScreenState extends State<ClockScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (appState.showDate) ...[
-                          Text(
-                            dateText,
-                            style: appState.textFont.style(
-                              fontSize: 32,
-                              color: skin.primaryTextColor,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
+                          // Shrink rather than overflow on a narrow screen or
+                          // with a large system font scale.
+                          SizedBox(
+                            width: c.maxWidth,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                dateText,
+                                style: appState.textFont.style(
+                                  fontSize: 32,
+                                  color: skin.primaryTextColor,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
+                        ],
+                        if (!appState.use24Hour) ...[
+                          Text(
+                            _now.hour < 12 ? 'AM' : 'PM',
+                            style: appState.textFont.style(
+                              fontSize: 14,
+                              color: skin.subTextColor,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
                         ],
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 450),

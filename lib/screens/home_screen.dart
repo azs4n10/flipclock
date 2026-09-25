@@ -68,14 +68,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const Spacer(),
-                  SegmentedTabs(
-                    items: const ['Pomodoro', 'Clock', 'Timer'],
-                    selectedIndex: _tabIndex,
-                    onChanged: _goToTab,
-                    skin: skin,
+                  // Expanded + scaleDown instead of Spacers: on a narrow
+                  // screen (or with a large system font) the tabs shrink
+                  // rather than pushing the settings button off the edge.
+                  Expanded(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: SegmentedTabs(
+                          items: const ['Pomodoro', 'Clock', 'Timer'],
+                          selectedIndex: _tabIndex,
+                          onChanged: _goToTab,
+                          skin: skin,
+                        ),
+                      ),
+                    ),
                   ),
-                  const Spacer(),
                   IconButton(
                     icon: Icon(Icons.tune, color: skin.primaryTextColor),
                     tooltip: 'Pomodoro settings',

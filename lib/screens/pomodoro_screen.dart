@@ -20,7 +20,12 @@ class PomodoroScreen extends StatefulWidget {
 }
 
 class _PomodoroScreenState extends State<PomodoroScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+  // Keep ticking while the user is on another tab: the PageView otherwise
+  // disposes this page, which stops the countdown and skips the chime.
+  @override
+  bool get wantKeepAlive => true;
+
   Timer? _ticker;
   PomodoroPhase _phase = PomodoroPhase.focus;
   int _completedFocus = 0;
@@ -90,9 +95,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         _startTicker();
         return;
       }
-      // Ended while away: show the phase finished, ready to start the next.
+      // Ended while away: apply the transition the ticker would have made, so
+      // the next phase is queued up instead of a frozen 00:00.
       _running = false;
-      _remaining = Duration.zero;
+      _endAt = null;
+      _advancePhase(state);
+      _persist();
       return;
     }
     final saved = state.pomoRemainingSec;
@@ -147,6 +155,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   void _start() {
     if (_running) return;
+    if (_remaining <= Duration.zero) {
+      _remaining = _durationForPhase(context.read<AppState>(), _phase);
+    }
     if (_remaining <= Duration.zero) return;
     _running = true;
     _endAt = DateTime.now().add(_remaining);
@@ -185,6 +196,11 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     _flashTick++;
     _running = false;
     _endAt = null;
+    _advancePhase(state);
+    _persist();
+  }
+
+  void _advancePhase(AppState state) {
     if (_phase == PomodoroPhase.focus) {
       _completedFocus += 1;
       final isLong = _completedFocus % state.longBreakInterval == 0;
@@ -196,7 +212,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       _phase = PomodoroPhase.focus;
       _remaining = Duration(minutes: state.focusMinutes);
     }
-    _persist();
   }
 
   String _phaseLabel() {
@@ -212,6 +227,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final state = context.watch<AppState>();
     final skin = state.skin;
 

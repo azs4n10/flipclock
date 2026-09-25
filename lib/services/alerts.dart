@@ -20,10 +20,14 @@ class Alerts {
       }
     }
     if (state.vibrationEnabled) {
-      // HapticFeedback is a no-op on platforms without a vibrator (e.g. web).
-      await HapticFeedback.heavyImpact();
-      await Future<void>.delayed(const Duration(milliseconds: 120));
-      await HapticFeedback.mediumImpact();
+      // HapticFeedback is a no-op on platforms without a vibrator (e.g. web),
+      // but the channel can still reject the call there; callers do not await
+      // notify(), so an escaping error would surface as an unhandled rejection.
+      try {
+        await HapticFeedback.heavyImpact();
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        await HapticFeedback.mediumImpact();
+      } catch (_) {}
     }
   }
 }

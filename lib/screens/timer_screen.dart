@@ -25,7 +25,13 @@ class TimerScreen extends StatefulWidget {
   State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _TimerScreenState extends State<TimerScreen> {
+class _TimerScreenState extends State<TimerScreen>
+    with AutomaticKeepAliveClientMixin {
+  // Without this the PageView disposes the page on a tab switch and a running
+  // stopwatch / countdown is silently thrown away.
+  @override
+  bool get wantKeepAlive => true;
+
   TimerMode _mode = TimerMode.countUp;
   Timer? _ticker;
   bool _running = false;
@@ -132,6 +138,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final appState = context.watch<AppState>();
     final skin = appState.skin;
     final font = appState.font;
@@ -152,11 +159,14 @@ class _TimerScreenState extends State<TimerScreen> {
         child: Column(
           children: [
             const SizedBox(height: 6),
-            SegmentedTabs(
-              items: const ['Count Up', 'Count Down', 'Target'],
-              selectedIndex: _mode.index,
-              onChanged: (i) => _switchMode(TimerMode.values[i]),
-              skin: skin,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SegmentedTabs(
+                items: const ['Count Up', 'Count Down', 'Target'],
+                selectedIndex: _mode.index,
+                onChanged: (i) => _switchMode(TimerMode.values[i]),
+                skin: skin,
+              ),
             ),
             const SizedBox(height: 10),
             _modeConfig(skin),
@@ -455,12 +465,14 @@ class _TimerScreenState extends State<TimerScreen> {
             onPressed: _running
                 ? null
                 : () async {
+                    final now = DateTime.now();
                     final picked = await showDatePicker(
                       context: context,
-                      initialDate: _targetTime,
-                      firstDate: DateTime.now(),
-                      lastDate:
-                          DateTime.now().add(const Duration(days: 365 * 5)),
+                      // A target left set overnight is now in the past, and
+                      // showDatePicker rejects an initialDate before firstDate.
+                      initialDate: _targetTime.isBefore(now) ? now : _targetTime,
+                      firstDate: now,
+                      lastDate: now.add(const Duration(days: 365 * 5)),
                     );
                     if (picked == null || !mounted) return;
                     final time = await showTimePicker(
