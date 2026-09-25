@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../services/bgm.dart';
 import '../theme/fonts.dart';
@@ -14,7 +17,7 @@ class AppState extends ChangeNotifier {
         _customDigit = _prefs.getInt(_kCustomDigit) ?? 0xFFBE5A8F,
         _customAccent = _prefs.getInt(_kCustomAccent) ?? 0xFFC4A8E1,
         _font = fontById(_prefs.getString(_kFontId) ?? allFonts.first.id),
-        _textFontId = _prefs.getString(_kTextFontId) ?? 'playfair',
+        _textFontId = normalizeTextFontId(_prefs.getString(_kTextFontId)),
         _focusMinutes = _prefs.getInt(_kFocusMinutes) ?? 25,
         _shortBreakMinutes = _prefs.getInt(_kShortBreakMinutes) ?? 5,
         _longBreakMinutes = _prefs.getInt(_kLongBreakMinutes) ?? 15,
@@ -27,7 +30,8 @@ class AppState extends ChangeNotifier {
         _signature = _prefs.getString(_kSignature) ?? 'take your time',
         _bgmId = _prefs.getString(_kBgmId) ?? 'none',
         _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0,
-        _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? false;
+        _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? false,
+        _keepScreenOn = _prefs.getBool(_kKeepScreenOn) ?? false;
 
   static const String _kSkinId = 'skin_id';
   static const String _kCustomBg = 'custom_bg';
@@ -49,10 +53,15 @@ class AppState extends ChangeNotifier {
   static const String _kBgmId = 'bgm_id';
   static const String _kFontScale = 'font_scale';
   static const String _kSeasonalEffect = 'seasonal_effect';
+  static const String _kKeepScreenOn = 'keep_screen_on';
 
   static Future<AppState> create() async {
     final prefs = await SharedPreferences.getInstance();
-    return AppState._(prefs);
+    final state = AppState._(prefs);
+    // Fire and forget: startup must not wait on a platform channel that may
+    // never answer (an unsupported platform, or a browser that refuses).
+    unawaited(state._applyKeepScreenOn());
+    return state;
   }
 
   final SharedPreferences _prefs;
@@ -77,6 +86,7 @@ class AppState extends ChangeNotifier {
   String _bgmId;
   double _fontScale;
   bool _seasonalEffect;
+  bool _keepScreenOn;
 
   Skin get skin => _skinId == 'custom' ? _customSkin() : skinById(_skinId);
   bool get isCustomSkin => _skinId == 'custom';
@@ -121,6 +131,7 @@ class AppState extends ChangeNotifier {
   String get bgmId => _bgmId;
   double get fontScale => _fontScale;
   bool get seasonalEffect => _seasonalEffect;
+  bool get keepScreenOn => _keepScreenOn;
 
   Future<void> setSkin(Skin next) async => setSkinId(next.id);
 
@@ -239,6 +250,23 @@ class AppState extends ChangeNotifier {
     _seasonalEffect = v;
     await _prefs.setBool(_kSeasonalEffect, v);
     notifyListeners();
+  }
+
+  Future<void> setKeepScreenOn(bool v) async {
+    _keepScreenOn = v;
+    await _prefs.setBool(_kKeepScreenOn, v);
+    // Reflect the choice straight away; a platform channel that never answers
+    // must not leave the switch looking stuck.
+    notifyListeners();
+    unawaited(_applyKeepScreenOn());
+  }
+
+  Future<void> _applyKeepScreenOn() async {
+    try {
+      await WakelockPlus.toggle(enable: _keepScreenOn);
+    } catch (_) {
+      // Unsupported platform, or the browser refused the wake lock.
+    }
   }
 
   // --- Pomodoro runtime state, persisted so it survives the app being

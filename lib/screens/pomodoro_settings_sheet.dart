@@ -89,6 +89,12 @@ class PomodoroSettingsSheet extends StatelessWidget {
               onChanged: state.setSeasonalEffect,
               skin: skin,
             ),
+            _ToggleTile(
+              label: 'Keep screen on',
+              value: state.keepScreenOn,
+              onChanged: state.setKeepScreenOn,
+              skin: skin,
+            ),
             _SignatureTile(
               value: state.signature,
               onChanged: state.setSignature,
@@ -172,16 +178,23 @@ class PomodoroSettingsSheet extends StatelessWidget {
               onTap: AppActions.share,
               skin: skin,
             ),
-            _ActionTile(
-              label: 'Send feedback',
-              icon: Icons.mail_outline,
-              onTap: AppActions.feedback,
-              skin: skin,
-            ),
+            if (AppActions.contactEmail.isNotEmpty)
+              _ActionTile(
+                label: 'Send feedback',
+                icon: Icons.mail_outline,
+                onTap: AppActions.feedback,
+                skin: skin,
+              ),
             _ActionTile(
               label: 'Rate us',
               icon: Icons.star_outline,
               onTap: AppActions.rate,
+              skin: skin,
+            ),
+            _ActionTile(
+              label: 'Privacy policy',
+              icon: Icons.lock_outline,
+              onTap: AppActions.privacy,
               skin: skin,
             ),
                   ],
@@ -234,38 +247,40 @@ class _SignatureTile extends StatelessWidget {
 
   Future<void> _edit(BuildContext context) async {
     final controller = TextEditingController(text: value);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: skin.cardBackground,
-        title: Text('Signature',
-            style: TextStyle(color: skin.primaryTextColor)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 40,
-          style: TextStyle(color: skin.primaryTextColor),
-          cursorColor: skin.buttonColor,
-          decoration: InputDecoration(
-            hintText: 'take your time',
-            hintStyle: TextStyle(color: skin.subTextColor),
+    try {
+      final result = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: skin.cardBackground,
+          title:
+              Text('Signature', style: TextStyle(color: skin.primaryTextColor)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLength: 40,
+            style: TextStyle(color: skin.primaryTextColor),
+            cursorColor: skin.buttonColor,
+            decoration: InputDecoration(
+              hintText: 'take your time',
+              hintStyle: TextStyle(color: skin.subTextColor),
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: TextStyle(color: skin.subTextColor)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: Text('OK', style: TextStyle(color: skin.buttonColor)),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel',
-                style: TextStyle(color: skin.subTextColor)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child:
-                Text('OK', style: TextStyle(color: skin.buttonColor)),
-          ),
-        ],
-      ),
-    );
-    if (result != null) onChanged(result);
+      );
+      if (result != null) onChanged(result);
+    } finally {
+      controller.dispose();
+    }
   }
 
   @override

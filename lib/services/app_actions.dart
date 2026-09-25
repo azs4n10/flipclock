@@ -11,6 +11,15 @@ class AppActions {
   static const String _shareText =
       'Flipclock — a cute pastel flip clock with timer & pomodoro';
 
+  /// Published alongside the web build, so it goes live with the next deploy.
+  static const String privacyUrl =
+      'https://azs4n10.github.io/flipclock/privacy.html';
+
+  /// Empty until the app has an address of its own. While it is empty the
+  /// feedback entry stays hidden rather than opening a blank mail draft.
+  /// Set it with tool/set_contact_email.py, which also updates the policy.
+  static const String contactEmail = '';
+
   static Future<void> share() async {
     try {
       await Share.share(_shareText);
@@ -18,11 +27,25 @@ class AppActions {
   }
 
   static Future<void> feedback() async {
-    final uri = Uri(scheme: 'mailto', query: 'subject=Flipclock Feedback');
+    if (contactEmail.isEmpty) return;
+    final uri = Uri(
+      scheme: 'mailto',
+      path: contactEmail,
+      query: 'subject=Flipclock Feedback',
+    );
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       }
+    } catch (_) {}
+  }
+
+  static Future<void> privacy() async {
+    try {
+      await launchUrl(
+        Uri.parse(privacyUrl),
+        mode: LaunchMode.externalApplication,
+      );
     } catch (_) {}
   }
 
