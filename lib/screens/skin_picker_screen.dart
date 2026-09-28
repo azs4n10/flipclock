@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/background_image.dart';
 import '../state/app_state.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../theme/skins.dart';
+import '../widgets/pill_button.dart';
 import 'custom_color_screen.dart';
 
 class SkinPickerScreen extends StatelessWidget {
@@ -143,6 +145,15 @@ class SkinPickerScreen extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: 24),
+          _SectionTitle('Background photo', skin: skin),
+          const SizedBox(height: 4),
+          Text(
+            'Use one of your own pictures behind the cards',
+            style: TextStyle(color: skin.subTextColor, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          const _BackgroundPhotoSection(),
         ],
       ),
     );
@@ -331,6 +342,100 @@ class _FontTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BackgroundPhotoSection extends StatefulWidget {
+  const _BackgroundPhotoSection();
+
+  @override
+  State<_BackgroundPhotoSection> createState() =>
+      _BackgroundPhotoSectionState();
+}
+
+class _BackgroundPhotoSectionState extends State<_BackgroundPhotoSection> {
+  bool _busy = false;
+
+  Future<void> _choose() async {
+    setState(() => _busy = true);
+    try {
+      final bytes = await BackgroundImage.pick();
+      if (bytes != null && mounted) {
+        await context.read<AppState>().setBackgroundImage(bytes);
+      }
+    } catch (_) {
+      // Cancelled, denied, or an unreadable file; leave the old one in place.
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final skin = state.skin;
+    final photo = state.backgroundImage;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (photo != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.memory(photo, fit: BoxFit.cover),
+                  ColoredBox(
+                    color: skin.background
+                        .withValues(alpha: state.backgroundScrim / 100),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (photo != null) const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            PillButton(
+              label: _busy
+                  ? 'Working...'
+                  : (photo == null ? 'Choose photo' : 'Change photo'),
+              onPressed: _busy ? () {} : _choose,
+              skin: skin,
+              icon: Icons.image_outlined,
+            ),
+            if (photo != null)
+              PillButton(
+                label: 'Remove',
+                onPressed: state.clearBackgroundImage,
+                skin: skin,
+                outlined: true,
+              ),
+          ],
+        ),
+        if (photo != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Dim  ${state.backgroundScrim}%',
+            style: TextStyle(color: skin.subTextColor, fontSize: 12),
+          ),
+          Slider(
+            value: state.backgroundScrim.toDouble(),
+            min: 0,
+            max: 80,
+            divisions: 8,
+            activeColor: skin.buttonColor,
+            onChanged: (v) => state.setBackgroundScrim(v.round()),
+          ),
+        ],
+      ],
     );
   }
 }

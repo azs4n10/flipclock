@@ -52,6 +52,23 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: skin.background,
       body: Stack(
         children: [
+          if (app.backgroundImage != null) ...[
+            Positioned.fill(
+              child: Image.memory(
+                app.backgroundImage!,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              ),
+            ),
+            // Veil in the theme colour so the cards keep their contrast over
+            // whatever photo was chosen.
+            Positioned.fill(
+              child: ColoredBox(
+                color: skin.background
+                    .withValues(alpha: app.backgroundScrim / 100),
+              ),
+            ),
+          ],
           SafeArea(
         bottom: false,
         child: Column(

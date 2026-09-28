@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +33,8 @@ class AppState extends ChangeNotifier {
         _bgmId = _prefs.getString(_kBgmId) ?? 'none',
         _fontScale = _prefs.getDouble(_kFontScale) ?? 1.0,
         _seasonalEffect = _prefs.getBool(_kSeasonalEffect) ?? false,
-        _keepScreenOn = _prefs.getBool(_kKeepScreenOn) ?? false;
+        _keepScreenOn = _prefs.getBool(_kKeepScreenOn) ?? false,
+        _bgScrim = _prefs.getInt(_kBgScrim) ?? 35;
 
   static const String _kSkinId = 'skin_id';
   static const String _kCustomBg = 'custom_bg';
@@ -54,6 +57,8 @@ class AppState extends ChangeNotifier {
   static const String _kFontScale = 'font_scale';
   static const String _kSeasonalEffect = 'seasonal_effect';
   static const String _kKeepScreenOn = 'keep_screen_on';
+  static const String _kBgImage = 'bg_image';
+  static const String _kBgScrim = 'bg_scrim';
 
   static Future<AppState> create() async {
     final prefs = await SharedPreferences.getInstance();
@@ -87,6 +92,9 @@ class AppState extends ChangeNotifier {
   double _fontScale;
   bool _seasonalEffect;
   bool _keepScreenOn;
+  int _bgScrim;
+  Uint8List? _bgBytes;
+  bool _bgLoaded = false;
 
   Skin get skin => _skinId == 'custom' ? _customSkin() : skinById(_skinId);
   bool get isCustomSkin => _skinId == 'custom';
@@ -132,6 +140,47 @@ class AppState extends ChangeNotifier {
   double get fontScale => _fontScale;
   bool get seasonalEffect => _seasonalEffect;
   bool get keepScreenOn => _keepScreenOn;
+
+  /// The user's own photo behind the cards, already shrunk. Decoded once and
+  /// then held, since every rebuild would otherwise re-decode it.
+  Uint8List? get backgroundImage {
+    if (!_bgLoaded) {
+      _bgLoaded = true;
+      final stored = _prefs.getString(_kBgImage);
+      if (stored != null && stored.isNotEmpty) {
+        try {
+          _bgBytes = base64Decode(stored);
+        } catch (_) {
+          _bgBytes = null;
+        }
+      }
+    }
+    return _bgBytes;
+  }
+
+  /// How strongly the theme colour veils the photo, 0-80 percent, so the
+  /// digits stay readable over a busy picture.
+  int get backgroundScrim => _bgScrim;
+
+  Future<void> setBackgroundImage(Uint8List jpeg) async {
+    _bgBytes = jpeg;
+    _bgLoaded = true;
+    await _prefs.setString(_kBgImage, base64Encode(jpeg));
+    notifyListeners();
+  }
+
+  Future<void> clearBackgroundImage() async {
+    _bgBytes = null;
+    _bgLoaded = true;
+    await _prefs.remove(_kBgImage);
+    notifyListeners();
+  }
+
+  Future<void> setBackgroundScrim(int v) async {
+    _bgScrim = v.clamp(0, 80);
+    await _prefs.setInt(_kBgScrim, _bgScrim);
+    notifyListeners();
+  }
 
   /// Chrome hidden so the flip fills the screen. Deliberately not persisted:
   /// it is a view mode, not a setting, and a launch should start readable.

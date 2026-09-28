@@ -41,6 +41,8 @@ dependencies:
   in_app_review: ^2.0.10
   flutter_colorpicker: ^1.1.0
   wakelock_plus: ^1.5.2
+  image_picker: ^1.2.3
+  image: ^4.10.1
 
 dev_dependencies:
   flutter_test:
