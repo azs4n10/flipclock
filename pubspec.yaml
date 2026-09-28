@@ -59,7 +59,7 @@ flutter_launcher_icons:
   web:
     generate: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#E6D4C2"
+  adaptive_icon_background: "#F472B6"
   adaptive_icon_foreground: "assets/icon/app_icon_fg.png"
 
 flutter_native_splash:
@@ -68,7 +68,9 @@ flutter_native_splash:
   image: assets/icon/splash_logo.png
   branding: assets/icon/splash_brand.png
   android_12:
-    color: "#F5EBE0"
+    # Android 12+ shows the launcher mark on this colour, so it has to match
+    # the icon: the mark is white and would vanish on the beige used above.
+    color: "#F472B6"
     image: assets/icon/app_icon_fg.png
 
 # For information on the generic Dart part of this file, see the

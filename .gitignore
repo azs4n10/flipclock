@@ -54,3 +54,8 @@ test/failures/
 android/key.properties
 *.jks
 *.keystore
+
+# Competitor icons and store dumps collected while designing; not ours to publish
+design/icons/_research/
+design/icons/competitors.png
+design/icons/big_digits_vs_rivals.png
