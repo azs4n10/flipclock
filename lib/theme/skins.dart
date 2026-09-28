@@ -3,7 +3,7 @@ import 'skin.dart';
 
 const Skin yumekawaSkin = Skin(
   id: 'yumekawa',
-  name: 'Yumekawa',
+  name: 'Cotton Candy',
   background: Color(0xFFFCE7F3),
   cardBackground: Color(0xFFFFFFFF),
   digitColor: Color(0xFFBE5A8F),
@@ -115,7 +115,7 @@ const Skin cocoaNightSkin = Skin(
 
 const Skin galaxySkin = Skin(
   id: 'galaxy',
-  name: 'Galaxy',
+  name: 'Nebula',
   background: Color(0xFF161A30),
   cardBackground: Color(0xFF272C4A),
   digitColor: Color(0xFFB9C7FF),
