@@ -242,16 +242,17 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           children: [
-            const SizedBox(height: 16),
-            Text(
-              _phaseLabel(),
-              style: state.textFont.style(
-                fontSize: 32,
-                letterSpacing: 3,
-                color: skin.primaryTextColor,
-                fontWeight: FontWeight.w600,
+            SizedBox(height: state.immersive ? 4 : 16),
+            if (!state.immersive)
+              Text(
+                _phaseLabel(),
+                style: state.textFont.style(
+                  fontSize: 32,
+                  letterSpacing: 3,
+                  color: skin.primaryTextColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
             Expanded(
               flex: 6,
               child: LayoutBuilder(
@@ -296,14 +297,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 },
               ),
             ),
-            Text(
-              'Completed: $_completedFocus',
-              style: TextStyle(
-                color: skin.subTextColor,
-                fontSize: 12,
-                letterSpacing: 1,
+            if (!state.immersive)
+              Text(
+                'Completed: $_completedFocus',
+                style: TextStyle(
+                  color: skin.subTextColor,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                ),
               ),
-            ),
             const SizedBox(height: 16),
             Wrap(
               alignment: WrapAlignment.center,

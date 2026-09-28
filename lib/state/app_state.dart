@@ -133,6 +133,16 @@ class AppState extends ChangeNotifier {
   bool get seasonalEffect => _seasonalEffect;
   bool get keepScreenOn => _keepScreenOn;
 
+  /// Chrome hidden so the flip fills the screen. Deliberately not persisted:
+  /// it is a view mode, not a setting, and a launch should start readable.
+  bool get immersive => _immersive;
+  bool _immersive = false;
+
+  void toggleImmersive() {
+    _immersive = !_immersive;
+    notifyListeners();
+  }
+
   Future<void> setSkin(Skin next) async => setSkinId(next.id);
 
   Future<void> setSkinId(String id) async {

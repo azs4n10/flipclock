@@ -131,6 +131,32 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('a tap frees the screen for the flip in landscape',
+      (tester) async {
+    _size(tester, const Size(844, 390)); // phone held sideways
+    await tester.pumpWidget(await _app({}));
+    await _pumpFor(tester, 500);
+
+    final before =
+        tester.getSize(find.byType(FlipGroup).first).width;
+    expect(find.text('Clock'), findsOneWidget);
+
+    await tester.tap(find.byType(PageView));
+    await _pumpFor(tester, 500);
+
+    // The bar and the surrounding text are gone, so the cards grow.
+    expect(find.text('Clock'), findsNothing);
+    final after = tester.getSize(find.byType(FlipGroup).first).width;
+    expect(after, greaterThan(before));
+
+    await tester.tap(find.byType(PageView));
+    await _pumpFor(tester, 500);
+    expect(find.text('Clock'), findsOneWidget);
+    expect(tester.getSize(find.byType(FlipGroup).first).width, before);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('the top bar fits a narrow screen', (tester) async {
     _size(tester, const Size(320, 640));
     await tester.pumpWidget(await _app({}));

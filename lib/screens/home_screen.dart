@@ -41,6 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final skin = app.skin;
+    final landscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    // The bar costs a quarter of the height on a phone held sideways, so it
+    // is slimmer there and disappears entirely in the immersive view.
+    final barPad = landscape ? 2.0 : 12.0;
+    final iconSize = landscape ? 20.0 : 24.0;
 
     return Scaffold(
       backgroundColor: skin.background,
@@ -50,12 +56,18 @@ class _HomeScreenState extends State<HomeScreen> {
         bottom: false,
         child: Column(
           children: [
-            Padding(
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              child: app.immersive
+                  ? const SizedBox(width: double.infinity, height: 0)
+                  : Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  EdgeInsets.symmetric(horizontal: 16, vertical: barPad),
               child: Row(
                 children: [
                   IconButton(
+                    iconSize: iconSize,
                     icon: Icon(
                       Icons.palette_outlined,
                       color: skin.primaryTextColor,
@@ -85,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   IconButton(
+                    iconSize: iconSize,
                     icon: Icon(Icons.tune, color: skin.primaryTextColor),
                     tooltip: 'Pomodoro settings',
                     onPressed: () => showModalBottomSheet(
@@ -107,8 +120,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+            ),
             Expanded(
-              child: PageView(
+              // A tap on empty space toggles the immersive view; buttons and
+              // the tabs keep their own taps.
+              child: GestureDetector(
+                onTap: context.read<AppState>().toggleImmersive,
+                child: PageView(
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _tabIndex = i),
                 children: const [
@@ -116,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ClockScreen(),
                   TimerScreen(),
                 ],
+                ),
               ),
             ),
           ],

@@ -58,6 +58,7 @@ class _ClockScreenState extends State<ClockScreen>
     final hh = hour.toString().padLeft(2, '0');
     final mm = _now.minute.toString().padLeft(2, '0');
     final ss = _now.second.toString().padLeft(2, '0');
+    final chrome = !appState.immersive; // date, meridiem and signature
     final values = appState.showSeconds ? [hh, mm, ss] : [hh, mm];
     final dateText = DateFormat('MMM d, yyyy  EEE').format(_now);
 
@@ -81,9 +82,10 @@ class _ClockScreenState extends State<ClockScreen>
                       Orientation.portrait;
                   // Reserve room for the date block so the group stays on screen.
                   // Date is a fixed size (font scale only affects the digits).
-                  final dateAllowance = appState.showDate ? 32 * 1.3 + 20 : 0.0;
+                  final dateAllowance =
+                      (appState.showDate && chrome) ? 32 * 1.3 + 20 : 0.0;
                   final meridiemAllowance =
-                      appState.use24Hour ? 0.0 : 14 * 1.3 + 6;
+                      (appState.use24Hour || !chrome) ? 0.0 : 14 * 1.3 + 6;
                   final flipH = c.maxHeight - dateAllowance - meridiemAllowance;
                   double maxCW;
                   if (portrait) {
@@ -124,7 +126,7 @@ class _ClockScreenState extends State<ClockScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (appState.showDate) ...[
+                        if (appState.showDate && chrome) ...[
                           // Shrink rather than overflow on a narrow screen or
                           // with a large system font scale.
                           SizedBox(
@@ -144,7 +146,7 @@ class _ClockScreenState extends State<ClockScreen>
                           ),
                           const SizedBox(height: 20),
                         ],
-                        if (!appState.use24Hour) ...[
+                        if (!appState.use24Hour && chrome) ...[
                           Text(
                             _now.hour < 12 ? 'AM' : 'PM',
                             style: appState.textFont.style(
@@ -177,17 +179,18 @@ class _ClockScreenState extends State<ClockScreen>
                 },
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              appState.signature,
-              style: appState.textFont.style(
-                fontSize: 18,
-                color: skin.subTextColor,
-                letterSpacing: 1.5,
-                fontWeight: FontWeight.w500,
-                fontStyle: FontStyle.italic,
+            SizedBox(height: chrome ? 16 : 0),
+            if (chrome)
+              Text(
+                appState.signature,
+                style: appState.textFont.style(
+                  fontSize: 18,
+                  color: skin.subTextColor,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w500,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
-            ),
             const Expanded(flex: 1, child: SizedBox.shrink()),
           ],
         ),

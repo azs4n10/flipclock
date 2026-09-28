@@ -158,18 +158,20 @@ class _TimerScreenState extends State<TimerScreen>
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           children: [
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: SegmentedTabs(
-                items: const ['Count Up', 'Count Down', 'Target'],
-                selectedIndex: _mode.index,
-                onChanged: (i) => _switchMode(TimerMode.values[i]),
-                skin: skin,
+            SizedBox(height: appState.immersive ? 2 : 6),
+            if (!appState.immersive) ...[
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: SegmentedTabs(
+                  items: const ['Count Up', 'Count Down', 'Target'],
+                  selectedIndex: _mode.index,
+                  onChanged: (i) => _switchMode(TimerMode.values[i]),
+                  skin: skin,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            _modeConfig(skin),
+              const SizedBox(height: 10),
+              _modeConfig(skin),
+            ],
             Expanded(
               flex: 6,
               child: LayoutBuilder(
