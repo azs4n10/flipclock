@@ -18,6 +18,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          # Pinned to the version the app is developed and tested with; newer
+          # stables add deprecation lints that fail `flutter analyze`.
+          flutter-version: 3.44.0
           channel: stable
           cache: true
       - run: flutter --version
@@ -93,6 +96,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          # Pinned to the version the app is developed and tested with; newer
+          # stables add deprecation lints that fail `flutter analyze`.
+          flutter-version: 3.44.0
           channel: stable
           cache: true
       - run: flutter --version
