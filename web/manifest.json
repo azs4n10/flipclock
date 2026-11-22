@@ -3,10 +3,10 @@
     "short_name": "flipclock",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
+    "background_color": "#F5EBE0",
+    "theme_color": "#F5EBE0",
     "description": "Cute pastel flipclock with timer, pomodoro and skins",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

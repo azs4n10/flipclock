@@ -20,10 +20,18 @@ const List<BgmTrack> bgmTracks = [
 BgmTrack bgmById(String id) =>
     bgmTracks.firstWhere((t) => t.id == id, orElse: () => bgmTracks.first);
 
+/// What the app state needs from a background-sound player; narrow so a test
+/// can stand in for the real one.
+abstract class BgmPlayer {
+  /// Stops whatever is playing and starts [id]. Returns false when playback
+  /// could not start, as when a browser is still waiting for a user gesture.
+  Future<bool> play(String id);
+}
+
 /// Loops the selected calm background track. A single shared player; selecting
 /// a new track stops the old one. Browsers only start audio after a user
-/// gesture, so playback begins when the user picks a track in settings.
-class BgmController {
+/// gesture, so there a saved track waits for the first tap (see AppState).
+class BgmController implements BgmPlayer {
   BgmController._();
   static final BgmController instance = BgmController._();
 
@@ -54,16 +62,19 @@ class BgmController {
     } catch (_) {}
   }
 
-  Future<void> play(String id) async {
+  @override
+  Future<bool> play(String id) async {
     final track = bgmById(id);
     try {
       await _configure();
       await _player.stop();
-      if (track.asset == null) return;
+      if (track.asset == null) return true;
       await _player.setReleaseMode(ReleaseMode.loop);
       await _player.play(AssetSource(track.asset!), volume: 0.6);
+      return true;
     } catch (_) {
-      // Unsupported platform / autoplay blocked — ignore.
+      // Unsupported platform / autoplay blocked.
+      return false;
     }
   }
 }

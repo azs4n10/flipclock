@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/alerts.dart';
+import '../services/timer_notifier.dart';
 import '../state/app_state.dart';
 import '../widgets/completion_flash.dart';
 import '../widgets/flip_card_row.dart';
@@ -93,14 +94,20 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         _remaining = left;
         _running = true;
         _startTicker();
+        // The system keeps a booked notice across a restart, but a browser
+        // tab does not; booking again is harmless where it was kept.
+        _bookNotice(askPermission: false);
         return;
       }
       // Ended while away: apply the transition the ticker would have made, so
-      // the next phase is queued up instead of a frozen 00:00.
+      // the next phase is queued up instead of a frozen 00:00. The notice
+      // booked at Start has told the user at the real end time; clear it now
+      // that they are back.
       _running = false;
       _endAt = null;
       _advancePhase(state);
       _persist();
+      state.cancelCompletionNotice(NoticeId.pomodoro);
       return;
     }
     final saved = state.pomoRemainingSec;
@@ -145,6 +152,24 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         );
   }
 
+  /// Books the notice for the end of the running phase, replacing any
+  /// earlier one.
+  void _bookNotice({bool askPermission = true}) {
+    final end = _endAt;
+    if (end == null) return;
+    final focus = _phase == PomodoroPhase.focus;
+    context.read<AppState>().scheduleCompletionNotice(
+          id: NoticeId.pomodoro,
+          at: end,
+          title: focus ? 'Focus complete' : 'Break over',
+          body: focus ? 'Time for a break.' : 'Ready for the next focus?',
+          askPermission: askPermission,
+        );
+  }
+
+  void _cancelNotice() =>
+      context.read<AppState>().cancelCompletionNotice(NoticeId.pomodoro);
+
   void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(milliseconds: 500), (_) {
@@ -163,6 +188,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     _endAt = DateTime.now().add(_remaining);
     _startTicker();
     _persist();
+    _bookNotice();
     setState(() {});
   }
 
@@ -172,6 +198,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     _running = false;
     _endAt = null;
     _persist();
+    _cancelNotice();
     setState(() {});
   }
 
@@ -186,6 +213,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       _remaining = Duration(minutes: state.focusMinutes);
     });
     _persist();
+    _cancelNotice();
   }
 
   void _onPhaseEnd() {
@@ -198,6 +226,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     _endAt = null;
     _advancePhase(state);
     _persist();
+    // In front, the chime and the flash have just said it. In the background
+    // the ticker can still be running, and there the notice is the only thing
+    // the user will see, so it is left to arrive.
+    if (state.inForeground) _cancelNotice();
   }
 
   void _advancePhase(AppState state) {

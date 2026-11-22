@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'screens/home_screen.dart';
 import 'state/app_state.dart';
+import 'theme/skin_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,22 +55,12 @@ class FlipclockApp extends StatelessWidget {
                 PointerDeviceKind.stylus,
               },
             ),
-            theme: ThemeData(
-              brightness: Brightness.light,
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: skin.buttonColor,
-                primary: skin.buttonColor,
-                surface: skin.background,
-              ),
-              scaffoldBackgroundColor: skin.background,
-              // App-wide UI font: a soft rounded sans (tabs, buttons, labels,
-              // settings). Headings (date / Focus / signature) override this
-              // with Playfair Display.
-              textTheme: GoogleFonts.quicksandTextTheme().apply(
-                bodyColor: skin.primaryTextColor,
-                displayColor: skin.primaryTextColor,
-              ),
-              useMaterial3: true,
+            theme: themeForSkin(skin),
+            // Status and navigation bar icons follow the skin too; a dark
+            // skin used to keep the dark icons of a light theme.
+            builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+              value: overlayStyleForSkin(skin),
+              child: child ?? const SizedBox.shrink(),
             ),
             home: const HomeScreen(),
           );

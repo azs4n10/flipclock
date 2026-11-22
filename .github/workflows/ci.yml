@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Every job is read-only except the deploy, which widens this for itself.
+permissions:
+  contents: read
+
 jobs:
   analyze-test-web:
     name: Analyze, test, build web
@@ -20,11 +24,67 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build web --release
+      # The site is served from https://azs4n10.github.io/flipclock/, so the
+      # build has to be told its path; this is the bundle that gets deployed.
+      - run: flutter build web --release --base-href /flipclock/
       - uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: build/web
+          # Keep dot-files such as .last_build_id, as a hand-made copy would.
+          include-hidden-files: true
+          if-no-files-found: error
+
+  # Publishes the bundle built and tested above to the gh-pages branch, which
+  # GitHub Pages already serves ("Deploy from a branch"), so no repository
+  # setting changes. Runs for pushes to main only, never for pull requests.
+  deploy-web:
+    name: Deploy web to GitHub Pages
+    needs: analyze-test-web
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # One deploy at a time; a newer push waits rather than racing the branch.
+    concurrency:
+      group: deploy-gh-pages
+      cancel-in-progress: false
+    steps:
+      - name: Check out the gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+      - name: Fetch the tested web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web-build
+      - name: Replace the site with the new build
+        run: |
+          set -euo pipefail
+          # Refuse to publish a bundle built for the wrong path.
+          grep -q '<base href="/flipclock/">' web-build/index.html
+          test -f web-build/main.dart.js
+          test -f web-build/privacy.html
+          # Drop everything but the branch's history, then lay the build down.
+          find site -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a web-build/. site/
+          # Stops Pages running Jekyll, which would skip some of the files.
+          touch site/.nojekyll
+      - name: Commit and push
+        working-directory: site
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "The site is already up to date."
+            exit 0
+          fi
+          git commit -m "Deploy web build for ${GITHUB_SHA::7}"
+          git push origin HEAD:gh-pages
 
   build-ios:
     name: Build iOS (no codesign)

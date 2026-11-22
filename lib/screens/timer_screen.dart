@@ -7,7 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../services/alerts.dart';
+import '../services/timer_notifier.dart';
 import '../state/app_state.dart';
+import '../state/timer_snapshot.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../widgets/completion_flash.dart';
@@ -50,10 +52,106 @@ class _TimerScreenState extends State<TimerScreen>
   DateTime _targetTime = DateTime.now().add(const Duration(hours: 1));
 
   @override
+  void initState() {
+    super.initState();
+    _restore(context.read<AppState>());
+  }
+
+  @override
   void dispose() {
     _ticker?.cancel();
     super.dispose();
   }
+
+  Duration get _wheelDuration =>
+      Duration(hours: _cdH, minutes: _cdM, seconds: _cdS);
+
+  /// Picks the timer up where the last session left it. A run is stored as
+  /// absolute times, so the time the app spent closed counts towards it.
+  void _restore(AppState state) {
+    final saved = state.timerSnapshot;
+    if (saved == null) return;
+    final now = DateTime.now();
+    _mode = TimerMode.values[saved.mode.clamp(0, TimerMode.values.length - 1)];
+    _countDownInitial =
+        Duration(milliseconds: saved.countDownMillis.clamp(0, 86399999));
+    _cdH = _countDownInitial.inHours;
+    _cdM = _countDownInitial.inMinutes % 60;
+    _cdS = _countDownInitial.inSeconds % 60;
+    _accumulated = Duration(
+        milliseconds: saved.accumulatedMillis < 0 ? 0 : saved.accumulatedMillis);
+
+    final target = DateTime.fromMillisecondsSinceEpoch(saved.targetMillis);
+    final wasRunning = saved.running && saved.startedAtMillis > 0;
+    // A target that has already gone by is only worth keeping for the run
+    // that was heading for it; otherwise start from the usual hour ahead.
+    if (target.isAfter(now) ||
+        (wasRunning && _mode == TimerMode.targetTime)) {
+      _targetTime = target;
+    }
+    if (!wasRunning) return;
+
+    var started = DateTime.fromMillisecondsSinceEpoch(saved.startedAtMillis);
+    if (started.isAfter(now)) started = now; // the clock was set back
+    final endedWhileAway = switch (_mode) {
+      TimerMode.countUp => false,
+      TimerMode.countDown =>
+        _accumulated + now.difference(started) >= _countDownInitial,
+      TimerMode.targetTime => !now.isBefore(_targetTime),
+    };
+    if (endedWhileAway) {
+      // Leave it as the ticker would have: stopped at zero. The notice
+      // booked at Start has told the user at the real end time.
+      _accumulated = _countDownInitial;
+      _persist();
+      state.cancelCompletionNotice(NoticeId.timer);
+      return;
+    }
+    _startedAt = started;
+    _running = true;
+    _startTicker();
+    // The system keeps a booked notice across a restart, but a browser tab
+    // does not; booking again is harmless where it was kept.
+    _bookNotice(askPermission: false);
+  }
+
+  void _persist() {
+    context.read<AppState>().saveTimer(TimerSnapshot(
+          mode: _mode.index,
+          running: _running,
+          startedAtMillis: _startedAt?.millisecondsSinceEpoch ?? 0,
+          accumulatedMillis: _accumulated.inMilliseconds,
+          countDownMillis: _wheelDuration.inMilliseconds,
+          targetMillis: _targetTime.millisecondsSinceEpoch,
+        ));
+  }
+
+  /// When the current run will end, or null for a stopwatch or a stopped
+  /// timer.
+  DateTime? get _endsAt {
+    final started = _startedAt;
+    if (!_running || started == null) return null;
+    return switch (_mode) {
+      TimerMode.countUp => null,
+      TimerMode.countDown => started.add(_countDownInitial - _accumulated),
+      TimerMode.targetTime => _targetTime,
+    };
+  }
+
+  void _bookNotice({bool askPermission = true}) {
+    final end = _endsAt;
+    if (end == null || !end.isAfter(DateTime.now())) return;
+    context.read<AppState>().scheduleCompletionNotice(
+          id: NoticeId.timer,
+          at: end,
+          title: "Time's up",
+          body: 'Your timer has finished.',
+          askPermission: askPermission,
+        );
+  }
+
+  void _cancelNotice() =>
+      context.read<AppState>().cancelCompletionNotice(NoticeId.timer);
 
   Duration get _elapsed {
     var e = _accumulated;
@@ -69,17 +167,25 @@ class _TimerScreenState extends State<TimerScreen>
       _startedAt = null;
       _ticker?.cancel();
       setState(() => _running = false);
+      _persist();
+      _cancelNotice();
       return;
     }
     if (_mode == TimerMode.countDown) {
-      _countDownInitial =
-          Duration(hours: _cdH, minutes: _cdM, seconds: _cdS);
+      _countDownInitial = _wheelDuration;
       if (_countDownInitial == Duration.zero) return; // nothing to count down
       // Always start a countdown fresh from the wheel value (pausing reveals
       // the wheels, so there is no mid-countdown resume to preserve).
       _accumulated = Duration.zero;
     }
     _startedAt = DateTime.now();
+    _startTicker();
+    setState(() => _running = true);
+    _persist();
+    _bookNotice();
+  }
+
+  void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(milliseconds: 33), (_) {
       if (!mounted) return;
@@ -92,7 +198,6 @@ class _TimerScreenState extends State<TimerScreen>
         }
       });
     });
-    setState(() => _running = true);
   }
 
   void _finish() {
@@ -101,7 +206,13 @@ class _TimerScreenState extends State<TimerScreen>
     _startedAt = null;
     _accumulated = _countDownInitial;
     _flashTick++;
-    Alerts.notify(context.read<AppState>());
+    final state = context.read<AppState>();
+    Alerts.notify(state);
+    _persist();
+    // In front, the chime and the flash have just said it. In the background
+    // the ticker can still be running, and there the notice is the only thing
+    // the user will see, so it is left to arrive.
+    if (state.inForeground) _cancelNotice();
   }
 
   void _reset() {
@@ -111,6 +222,8 @@ class _TimerScreenState extends State<TimerScreen>
       _accumulated = Duration.zero;
       _startedAt = null;
     });
+    _persist();
+    _cancelNotice();
   }
 
   void _switchMode(TimerMode mode) {
@@ -121,6 +234,17 @@ class _TimerScreenState extends State<TimerScreen>
       _accumulated = Duration.zero;
       _startedAt = null;
     });
+    _persist();
+    _cancelNotice();
+  }
+
+  void _setWheels({int? h, int? m, int? s}) {
+    setState(() {
+      _cdH = h ?? _cdH;
+      _cdM = m ?? _cdM;
+      _cdS = s ?? _cdS;
+    });
+    _persist();
   }
 
   Duration _shownDuration() {
@@ -437,11 +561,11 @@ class _TimerScreenState extends State<TimerScreen>
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            wheel(24, _cdH, (v) => setState(() => _cdH = v), 'HOUR'),
+            wheel(24, _cdH, (v) => _setWheels(h: v), 'HOUR'),
             SizedBox(width: gap),
-            wheel(60, _cdM, (v) => setState(() => _cdM = v), 'MIN'),
+            wheel(60, _cdM, (v) => _setWheels(m: v), 'MIN'),
             SizedBox(width: gap),
-            wheel(60, _cdS, (v) => setState(() => _cdS = v), 'SEC'),
+            wheel(60, _cdS, (v) => _setWheels(s: v), 'SEC'),
           ],
         );
       },
@@ -491,6 +615,7 @@ class _TimerScreenState extends State<TimerScreen>
                         time.minute,
                       );
                     });
+                    _persist();
                   },
             child: Text(
               DateFormat('MMM d, yyyy  HH:mm').format(_targetTime),

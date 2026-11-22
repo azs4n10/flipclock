@@ -27,4 +27,10 @@ class Skin {
   final Color primaryTextColor;
   final Color subTextColor;
   final Color dividerColor;
+
+  /// Whether this skin is a dark or a light one, judged from its background
+  /// so that a custom skin is covered too. Drives the Material theme and the
+  /// colour of the system status and navigation bar icons.
+  Brightness get brightness =>
+      ThemeData.estimateBrightnessForColor(background);
 }

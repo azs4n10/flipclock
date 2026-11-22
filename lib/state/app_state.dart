@@ -1,18 +1,22 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../services/background_photo_store.dart';
 import '../services/bgm.dart';
+import '../services/timer_notifier.dart';
 import '../theme/fonts.dart';
 import '../theme/skin.dart';
 import '../theme/skins.dart';
+import 'timer_snapshot.dart';
 
 class AppState extends ChangeNotifier {
-  AppState._(this._prefs)
+  AppState._(this._prefs, this._notifier, this._bgmOverride, this._photoStore)
       : _skinId = _prefs.getString(_kSkinId) ?? beigeRoseSkin.id,
         _customBg = _prefs.getInt(_kCustomBg) ?? 0xFFFCE7F3,
         _customCard = _prefs.getInt(_kCustomCard) ?? 0xFFFFFFFF,
@@ -57,19 +61,41 @@ class AppState extends ChangeNotifier {
   static const String _kFontScale = 'font_scale';
   static const String _kSeasonalEffect = 'seasonal_effect';
   static const String _kKeepScreenOn = 'keep_screen_on';
-  static const String _kBgImage = 'bg_image';
   static const String _kBgScrim = 'bg_scrim';
+  static const String _kNoticeAsked = 'notice_permission_asked';
 
-  static Future<AppState> create() async {
+  /// The optional arguments replace the platform services, for tests.
+  /// [autoplayBlocked] says whether sound has to wait for a user gesture; it
+  /// defaults to true in a browser and false elsewhere.
+  static Future<AppState> create({
+    TimerNotifier? notifier,
+    BgmPlayer? bgm,
+    BackgroundPhotoStore? photoStore,
+    bool? autoplayBlocked,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    final state = AppState._(prefs);
+    final state = AppState._(
+      prefs,
+      notifier ?? createTimerNotifier(),
+      bgm,
+      photoStore ?? createBackgroundPhotoStore(prefs),
+    );
     // Fire and forget: startup must not wait on a platform channel that may
     // never answer (an unsupported platform, or a browser that refuses).
     unawaited(state._applyKeepScreenOn());
+    await state._loadBackgroundImage();
+    state._restoreBgm(autoplayBlocked ?? kIsWeb);
     return state;
   }
 
   final SharedPreferences _prefs;
+  final TimerNotifier _notifier;
+  final BackgroundPhotoStore _photoStore;
+
+  // Null means the shared player, which is only created once sound is
+  // actually wanted.
+  final BgmPlayer? _bgmOverride;
+  BgmPlayer get _bgm => _bgmOverride ?? BgmController.instance;
 
   String _skinId;
   int _customBg;
@@ -94,7 +120,6 @@ class AppState extends ChangeNotifier {
   bool _keepScreenOn;
   int _bgScrim;
   Uint8List? _bgBytes;
-  bool _bgLoaded = false;
 
   Skin get skin => _skinId == 'custom' ? _customSkin() : skinById(_skinId);
   bool get isCustomSkin => _skinId == 'custom';
@@ -141,21 +166,26 @@ class AppState extends ChangeNotifier {
   bool get seasonalEffect => _seasonalEffect;
   bool get keepScreenOn => _keepScreenOn;
 
-  /// The user's own photo behind the cards, already shrunk. Decoded once and
-  /// then held, since every rebuild would otherwise re-decode it.
-  Uint8List? get backgroundImage {
-    if (!_bgLoaded) {
-      _bgLoaded = true;
-      final stored = _prefs.getString(_kBgImage);
-      if (stored != null && stored.isNotEmpty) {
-        try {
-          _bgBytes = base64Decode(stored);
-        } catch (_) {
-          _bgBytes = null;
-        }
-      }
+  /// The user's own photo behind the cards, already shrunk. Read once at
+  /// launch and then held, since every rebuild would otherwise reload it.
+  Uint8List? get backgroundImage => _bgBytes;
+
+  Future<void> _loadBackgroundImage() async {
+    try {
+      // Earlier versions kept the photo inside the settings as base64, which
+      // made every launch load and decode it; phones now keep it in a file.
+      _bgBytes = await _migrateAndReadPhoto()
+          .timeout(const Duration(seconds: 3));
+    } catch (_) {
+      // Storage unavailable or slow to answer: start without waiting for it,
+      // showing the old copy if that is still in place.
+      _bgBytes = decodeLegacyBackgroundPhoto(_prefs);
     }
-    return _bgBytes;
+  }
+
+  Future<Uint8List?> _migrateAndReadPhoto() async {
+    await migrateLegacyBackgroundPhoto(_prefs, _photoStore);
+    return _photoStore.read();
   }
 
   /// How strongly the theme colour veils the photo, 0-80 percent, so the
@@ -163,17 +193,22 @@ class AppState extends ChangeNotifier {
   int get backgroundScrim => _bgScrim;
 
   Future<void> setBackgroundImage(Uint8List jpeg) async {
+    await _photoStore.write(jpeg);
+    // A copy from an earlier version that could not be moved yet would
+    // otherwise be migrated over this one at the next launch.
+    if (_photoStore is! PrefsBackgroundPhotoStore) {
+      await _prefs.remove(legacyBackgroundPhotoKey);
+    }
     _bgBytes = jpeg;
-    _bgLoaded = true;
-    await _prefs.setString(_kBgImage, base64Encode(jpeg));
     notifyListeners();
   }
 
   Future<void> clearBackgroundImage() async {
     _bgBytes = null;
-    _bgLoaded = true;
-    await _prefs.remove(_kBgImage);
     notifyListeners();
+    await _photoStore.clear();
+    // A copy from an earlier version may still be waiting to be migrated.
+    await _prefs.remove(legacyBackgroundPhotoKey);
   }
 
   Future<void> setBackgroundScrim(int v) async {
@@ -294,9 +329,135 @@ class AppState extends ChangeNotifier {
 
   Future<void> setBgm(String id) async {
     _bgmId = id;
+    // Picking a track is itself the gesture a browser waits for.
+    _stopWaitingForGesture();
     await _prefs.setString(_kBgmId, id);
-    await BgmController.instance.play(id);
+    await _bgm.play(id);
     notifyListeners();
+  }
+
+  /// True while a saved track is waiting for the first tap or key press,
+  /// which is when a browser starts allowing sound.
+  bool get bgmAwaitingGesture => _bgmAwaitingGesture;
+  bool _bgmAwaitingGesture = false;
+  bool _bgmStarting = false;
+
+  /// Starts the track saved by an earlier session. Without this the settings
+  /// sheet showed it selected while nothing was playing.
+  void _restoreBgm(bool autoplayBlocked) {
+    if (bgmById(_bgmId).asset == null) return;
+    if (!autoplayBlocked) {
+      unawaited(_bgm.play(_bgmId));
+      return;
+    }
+    // Nothing on screen claims the track is playing until the settings sheet
+    // is opened, and opening it takes a tap, which is what starts the sound.
+    _bgmAwaitingGesture = true;
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
+    HardwareKeyboard.instance.addHandler(_onKey);
+  }
+
+  // The release, not the press: a touch only counts as a user gesture for a
+  // browser once the finger lifts.
+  void _onPointer(PointerEvent event) {
+    if (event is PointerUpEvent) handleUserGesture();
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (event is KeyDownEvent) handleUserGesture();
+    return false; // never swallow the key
+  }
+
+  /// Called on the first tap or key press when sound had to wait for one.
+  @visibleForTesting
+  Future<void> handleUserGesture() async {
+    if (!_bgmAwaitingGesture || _bgmStarting) return;
+    _bgmStarting = true;
+    final id = _bgmId;
+    final started = await _bgm.play(id);
+    _bgmStarting = false;
+    // A refusal leaves the wait in place, so the next gesture tries again.
+    // A track picked in the meantime has already ended the wait itself.
+    if (started && _bgmAwaitingGesture && id == _bgmId) {
+      _stopWaitingForGesture();
+      notifyListeners();
+    }
+  }
+
+  void _stopWaitingForGesture() {
+    if (!_bgmAwaitingGesture) return;
+    _bgmAwaitingGesture = false;
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
+    HardwareKeyboard.instance.removeHandler(_onKey);
+  }
+
+  @override
+  void dispose() {
+    _stopWaitingForGesture();
+    super.dispose();
+  }
+
+  // --- Completion notices. A countdown books one for its end time when it
+  // starts, so the user hears about it even if the app has been put away or
+  // killed by then; pausing, resetting or changing the countdown withdraws it.
+  Future<void> _noticeQueue = Future<void>.value();
+
+  // One at a time and in order, so a quick Start then Pause can never leave
+  // a notice booked after its countdown has stopped.
+  Future<void> _enqueueNotice(Future<void> Function() task) {
+    return _noticeQueue = _noticeQueue.then((_) async {
+      try {
+        await task();
+      } catch (_) {
+        // A platform that cannot notify must not break the countdown.
+      }
+    });
+  }
+
+  /// Books a notice for [at]. With [askPermission], permission is requested
+  /// the first time this is called, which is the first time the user starts
+  /// a countdown rather than the moment the app opens; restoring a countdown
+  /// at launch passes false.
+  Future<void> scheduleCompletionNotice({
+    required int id,
+    required DateTime at,
+    required String title,
+    required String body,
+    bool askPermission = true,
+  }) {
+    // Asked before the first await: a browser only shows its permission
+    // prompt from inside the tap that led to it.
+    final ask = askPermission && !(_prefs.getBool(_kNoticeAsked) ?? false);
+    final permission = ask ? _askNoticePermission() : null;
+    final sound = _remindSoundEnabled;
+    return _enqueueNotice(() async {
+      await permission;
+      await _notifier.schedule(
+        id: id,
+        at: at,
+        title: title,
+        body: body,
+        sound: sound,
+      );
+    });
+  }
+
+  Future<void> _askNoticePermission() async {
+    try {
+      final asking = _notifier.requestPermission();
+      await _prefs.setBool(_kNoticeAsked, true);
+      await asking;
+    } catch (_) {}
+  }
+
+  Future<void> cancelCompletionNotice(int id) =>
+      _enqueueNotice(() => _notifier.cancel(id));
+
+  /// True when the app is the one in front, where its own chime and flash
+  /// announce the end and a pending notice would only repeat them.
+  bool get inForeground {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    return lifecycle == null || lifecycle == AppLifecycleState.resumed;
   }
 
   Future<void> setFontScale(double v) async {
@@ -349,5 +510,28 @@ class AppState extends ChangeNotifier {
     await _prefs.setBool('pomo_running', running);
     await _prefs.setInt('pomo_end_millis', endMillis);
     await _prefs.setInt('pomo_remaining_sec', remainingSec);
+  }
+
+  // --- Timer runtime state, kept the same way: the run is stored as absolute
+  // times, so a stopwatch or a countdown carries on across a restart.
+  TimerSnapshot? get timerSnapshot {
+    if (!_prefs.containsKey('timer_mode')) return null;
+    return TimerSnapshot(
+      mode: _prefs.getInt('timer_mode') ?? 0,
+      running: _prefs.getBool('timer_running') ?? false,
+      startedAtMillis: _prefs.getInt('timer_started_millis') ?? 0,
+      accumulatedMillis: _prefs.getInt('timer_accumulated_millis') ?? 0,
+      countDownMillis: _prefs.getInt('timer_countdown_millis') ?? 0,
+      targetMillis: _prefs.getInt('timer_target_millis') ?? 0,
+    );
+  }
+
+  Future<void> saveTimer(TimerSnapshot t) async {
+    await _prefs.setInt('timer_mode', t.mode);
+    await _prefs.setBool('timer_running', t.running);
+    await _prefs.setInt('timer_started_millis', t.startedAtMillis);
+    await _prefs.setInt('timer_accumulated_millis', t.accumulatedMillis);
+    await _prefs.setInt('timer_countdown_millis', t.countDownMillis);
+    await _prefs.setInt('timer_target_millis', t.targetMillis);
   }
 }
